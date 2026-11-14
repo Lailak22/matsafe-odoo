@@ -1,0 +1,7 @@
+<odoo>
+    <menuitem id="my_module_menu_root" name="My Module">
+        <menuitem id="my_module_first_level_menu" name="Records">
+            <menuitem id="my_model_menu_action" action="my_model_action"/>
+        </menuitem>
+    </menuitem>
+</odoo>
