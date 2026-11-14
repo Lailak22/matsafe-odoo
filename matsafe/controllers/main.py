@@ -250,11 +250,21 @@ class MatsafeWebsite(http.Controller):
             'description': self._report_description(kind, answers, details),
         })
         done = self._report_facts(report)
-        # Demo mode: no real email is sent during a demo, so the thank-you page shows the link.
+        self._email_confirm_link(report)
+        # Demo mode: the thank-you page also shows the link (the email is queued all the same).
         # Otherwise the token never leaves the server (it is not even put in the session).
         if done['pending'] and self._demo_mode():
             done['demo_link'] = '/matsafe/report/confirm/%s' % report.confirm_token
         return done
+
+    def _email_confirm_link(self, report):
+        """Queue the confirmation email. A mail problem must never lose the report or break the
+        page: own savepoint, and only a log line if it fails (a coach can still confirm it)."""
+        try:
+            with request.env.cr.savepoint():
+                report._send_confirm_email()
+        except Exception:
+            _logger.exception("MatSafe: confirmation email for report %s not queued", report.id)
 
     def _demo_mode(self):
         """True when the system parameter matsafe.demo_mode is "1" (Settings > Technical > System Parameters)."""

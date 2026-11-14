@@ -1,8 +1,15 @@
+import logging
 import secrets
 from datetime import timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
+
+# Plain words for the report type, as on the report form cards (used in the confirmation email)
+KIND_LABELS = {'skin': "Skin issue", 'viral': "Feeling sick", 'injury': "Injury",
+               'head': "Head knock", 'other': "Something else"}
 
 RETURN_DAYS = {'skin': 7, 'viral': 3, 'injury': 14, 'head': 21, 'other': 3}
 
@@ -40,6 +47,39 @@ class MatsafeReport(models.Model):
                                    'report_id', 'partner_id', string="Traced Contacts")
     cluster_id = fields.Many2one('matsafe.cluster', string="Cluster", index=True)
     cleared_by = fields.Many2one('res.users', string="Cleared By")
+    # For the confirmation email (not stored)
+    kind_label = fields.Char(compute='_compute_kind_label')
+    confirm_url = fields.Char(compute='_compute_confirm_url')
+
+    @api.depends('report_type')
+    def _compute_kind_label(self):
+        for report in self:
+            report.kind_label = KIND_LABELS.get(report.report_type, KIND_LABELS['other'])
+
+    @api.depends('confirm_token')
+    def _compute_confirm_url(self):
+        for report in self:
+            # get_base_url(): the web.base.url system parameter, so the link works outside the server
+            report.confirm_url = report.confirm_token and '%s/matsafe/report/confirm/%s' % (
+                report.get_base_url(), report.confirm_token)
+
+    def _send_confirm_email(self):
+        """Queue the confirmation email for pending reports whose member has an email.
+        Never raises: the report is saved either way (a coach can still confirm it).
+        Returns the reports an email was queued for."""
+        template = self.env.ref('matsafe.mail_template_report_confirm', raise_if_not_found=False)
+        sent = self.browse()
+        for report in self.filtered(lambda r: r.state == 'pending'):
+            if not template:
+                _logger.warning("MatSafe: confirmation email template missing, report %s not emailed", report.id)
+            elif not report.member_id.email:
+                _logger.info("MatSafe: member %s has no email, confirmation email for report %s not sent",
+                             report.member_id.id, report.id)
+            else:
+                # Queued (not sent now): the mail queue sends it, the form never waits for a mail server
+                template.send_mail(report.id)
+                sent |= report
+        return sent
 
     @api.depends('confirm_date', 'report_type')
     def _compute_min_return_date(self):
