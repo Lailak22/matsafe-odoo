@@ -1,4 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_matsafe_root" name="MatSafe" sequence="50"/>
+    <menuitem id="menu_matsafe_root" name="MatSafe" sequence="50"
+              groups="matsafe.group_coach"/>
+
+    <!-- Dashboard -->
+    <menuitem id="menu_matsafe_dashboard" name="Dashboard" parent="menu_matsafe_root" sequence="10"/>
+    <menuitem id="menu_matsafe_dashboard_reports" name="Reports per Week"
+              parent="menu_matsafe_dashboard" action="action_matsafe_dashboard" sequence="1"/>
+    <menuitem id="menu_matsafe_dashboard_checkins" name="Check-ins per Day"
+              parent="menu_matsafe_dashboard" action="action_matsafe_dashboard_checkin" sequence="2"/>
+    <menuitem id="menu_matsafe_dashboard_gear" name="Gear by State"
+              parent="menu_matsafe_dashboard" action="action_matsafe_dashboard_gear" sequence="3"/>
+    <menuitem id="menu_matsafe_dashboard_members" name="Members by State"
+              parent="menu_matsafe_dashboard" action="action_matsafe_dashboard_members" sequence="4"/>
+
+    <menuitem id="menu_matsafe_classes" name="Classes" parent="menu_matsafe_root"
+              action="action_matsafe_session" sequence="20"/>
+    <menuitem id="menu_matsafe_members" name="Members" parent="menu_matsafe_root"
+              action="action_matsafe_members" sequence="30"/>
+    <menuitem id="menu_matsafe_reports" name="Reports" parent="menu_matsafe_root"
+              action="action_matsafe_report" sequence="40"/>
+    <menuitem id="menu_matsafe_outbreaks" name="Outbreaks" parent="menu_matsafe_root"
+              action="action_matsafe_cluster" sequence="50"/>
+    <menuitem id="menu_matsafe_door_log" name="Door Log" parent="menu_matsafe_root"
+              action="action_matsafe_checkin" sequence="60"/>
+    <menuitem id="menu_matsafe_gear" name="Gear" parent="menu_matsafe_root"
+              action="action_matsafe_gear" sequence="70"/>
+
+    <!-- Settings -->
+    <menuitem id="menu_matsafe_settings" name="Settings" parent="menu_matsafe_root" sequence="90"
+              groups="matsafe.group_head_coach"/>
+    <menuitem id="menu_matsafe_settings_pairings" name="Pairings"
+              parent="menu_matsafe_settings" action="action_matsafe_pairing" sequence="1"/>
+    <menuitem id="menu_matsafe_settings_cleaning" name="Mat Cleaning Tasks"
+              parent="menu_matsafe_settings" action="action_matsafe_cleaning_tasks" sequence="2"/>
+    <menuitem id="menu_matsafe_settings_crons" name="Scheduled Actions"
+              parent="menu_matsafe_settings" action="base.ir_cron_act" sequence="3"
+              groups="base.group_system"/>
 </odoo>

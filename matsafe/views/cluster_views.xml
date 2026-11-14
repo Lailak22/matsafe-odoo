@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_matsafe_cluster_list" model="ir.ui.view">
+        <field name="name">matsafe.cluster.list</field>
+        <field name="model">matsafe.cluster</field>
+        <field name="arch" type="xml">
+            <list string="Outbreaks" decoration-danger="state == 'active'" decoration-muted="state == 'closed'">
+                <field name="name"/>
+                <field name="report_ids" widget="many2many_tags" string="Reports"/>
+                <field name="session_ids" widget="many2many_tags"/>
+                <field name="state" widget="badge"
+                       decoration-danger="state == 'active'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_matsafe_cluster_form" model="ir.ui.view">
+        <field name="name">matsafe.cluster.form</field>
+        <field name="model">matsafe.cluster</field>
+        <field name="arch" type="xml">
+            <form string="Outbreak">
+                <header>
+                    <!-- Click "Closed" on the statusbar to close the outbreak -->
+                    <field name="state" widget="statusbar" options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-danger text-center fs-4" role="alert" invisible="state != 'active'">
+                        <strong>ACTIVE OUTBREAK</strong>: all attendees of the shared classes have been alerted.
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <notebook>
+                        <page string="Reports" name="reports">
+                            <field name="report_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="member_id"/>
+                                    <field name="report_type"/>
+                                    <field name="state" widget="badge"
+                                           decoration-danger="state == 'open'"
+                                           decoration-success="state == 'cleared'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Shared Classes" name="sessions">
+                            <field name="session_ids" readonly="1">
+                                <list>
+                                    <field name="start"/>
+                                    <field name="name"/>
+                                    <field name="mat_zone"/>
+                                    <field name="attendee_ids" widget="many2many_tags"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_matsafe_cluster" model="ir.actions.act_window">
+        <field name="name">Outbreaks</field>
+        <field name="res_model">matsafe.cluster</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No outbreaks. Keep it that way!</p>
+        </field>
+    </record>
+</odoo>

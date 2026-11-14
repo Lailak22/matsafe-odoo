@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- "MatSafe" tab on the contact form -->
+    <record id="view_partner_form_matsafe" model="ir.ui.view">
+        <field name="name">res.partner.form.matsafe</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="MatSafe" name="matsafe">
+                    <group>
+                        <group string="Membership">
+                            <field name="is_member"/>
+                            <field name="member_code" invisible="not is_member"/>
+                            <field name="member_state" widget="badge" invisible="not is_member"
+                                   decoration-success="member_state == 'active'"
+                                   decoration-danger="member_state == 'blocked'"
+                                   decoration-warning="member_state == 'frozen'"/>
+                            <field name="open_report_id" invisible="not open_report_id"/>
+                            <field name="matsafe_currency_id" invisible="1"/>
+                            <field name="monthly_fee" invisible="not is_member"/>
+                        </group>
+                        <group string="Training" invisible="not is_member">
+                            <field name="level"/>
+                            <field name="weight_kg"/>
+                            <field name="face_label"/>
+                            <field name="last_checkin"/>
+                            <field name="usual_sessions_week"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Member list (only used by the Members menu, so priority is high) -->
+    <record id="view_partner_member_list" model="ir.ui.view">
+        <field name="name">res.partner.list.matsafe.member</field>
+        <field name="model">res.partner</field>
+        <field name="priority">50</field>
+        <field name="arch" type="xml">
+            <list string="Members"
+                  decoration-danger="member_state == 'blocked'"
+                  decoration-warning="member_state == 'frozen'">
+                <field name="member_code"/>
+                <field name="name"/>
+                <field name="level"/>
+                <field name="weight_kg"/>
+                <field name="last_checkin"/>
+                <field name="usual_sessions_week" optional="hide"/>
+                <field name="member_state" widget="badge"
+                       decoration-success="member_state == 'active'"
+                       decoration-danger="member_state == 'blocked'"
+                       decoration-warning="member_state == 'frozen'"/>
+                <field name="open_report_id" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- "Members" filters on the contacts search -->
+    <record id="view_partner_search_matsafe" model="ir.ui.view">
+        <field name="name">res.partner.search.matsafe</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="member_code"/>
+                <separator/>
+                <filter string="Members" name="filter_members" domain="[('is_member', '=', True)]"/>
+                <filter string="Blocked" name="filter_blocked" domain="[('member_state', '=', 'blocked')]"/>
+                <filter string="Frozen" name="filter_frozen" domain="[('member_state', '=', 'frozen')]"/>
+                <filter string="Member State" name="group_member_state" context="{'group_by': 'member_state'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_matsafe_members" model="ir.actions.act_window">
+        <field name="name">Members</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_partner_member_list')}),
+            (0, 0, {'view_mode': 'kanban'}),
+            (0, 0, {'view_mode': 'form'})]"/>
+        <field name="context">{'default_is_member': True, 'search_default_filter_members': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add your first gym member</p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All templates render on the recipient (res.partner), so the reporter's
+     name can never leak into what contacts receive. -->
+<odoo>
+    <data noupdate="1">
+
+    <!-- 1. To a training partner of someone who reported (ANONYMOUS) -->
+    <record id="mail_template_contact_alert" model="mail.template">
+        <field name="name">MatSafe: Contact alert</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="subject">MatSafe: please check yourself</field>
+        <field name="email_from">{{ (user.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.id }}</field>
+        <field name="lang">{{ object.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="font-family: Arial, sans-serif; font-size: 14px;">
+    <p>Hi <t t-out="object.name or ''">Member</t>,</p>
+    <p>Someone you trained with recently reported a skin issue or injury.
+       Please check yourself and report at
+       <a t-attf-href="{{ object.get_base_url() }}/matsafe/report">/matsafe/report</a>
+       if you notice anything.</p>
+    <p>No action is needed if you feel fine. Thanks for keeping the mats safe!</p>
+    <p>The MatSafe team</p>
+    <p dir="rtl">شخص تدربت معه مؤخرًا أبلغ عن مشكلة جلدية أو إصابة. يرجى فحص نفسك والإبلاغ إذا لاحظت أي شيء.</p>
+</div>
+        </field>
+    </record>
+
+    <!-- 2. Outbreak: to all attendees of the affected classes -->
+    <record id="mail_template_outbreak" model="mail.template">
+        <field name="name">MatSafe: Outbreak notice</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="subject">MatSafe: outbreak alert for your class</field>
+        <field name="email_from">{{ (user.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.id }}</field>
+        <field name="lang">{{ object.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="font-family: Arial, sans-serif; font-size: 14px;">
+    <p>Hi <t t-out="object.name or ''">Member</t>,</p>
+    <p><strong>More than one member from a class you attended has reported symptoms.</strong></p>
+    <p>Please check your skin carefully before your next session, wash your gear,
+       and report at <a t-attf-href="{{ object.get_base_url() }}/matsafe/report">/matsafe/report</a>
+       if you notice anything. The affected mats are being deep cleaned.</p>
+    <p>The MatSafe team</p>
+    <p dir="rtl">أبلغ أكثر من عضو من حصة حضرتها عن أعراض. يرجى فحص نفسك وغسل معداتك قبل التدريب القادم.</p>
+</div>
+        </field>
+    </record>
+
+    <!-- 3. Absence detector: a regular who stopped coming -->
+    <record id="mail_template_we_miss_you" model="mail.template">
+        <field name="name">MatSafe: We miss you</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="subject">We miss you on the mats!</field>
+        <field name="email_from">{{ (user.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.id }}</field>
+        <field name="lang">{{ object.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="font-family: Arial, sans-serif; font-size: 14px;">
+    <p>Hi <t t-out="object.name or ''">Member</t>,</p>
+    <p>We haven't seen you at the gym for over a week and we miss you!</p>
+    <p>If something is wrong (a skin issue or an injury), you can tell us privately here:
+       <a t-attf-href="{{ object.get_base_url() }}/matsafe/report">/matsafe/report</a>.</p>
+    <p>I'm fine? Great! Just come to your next class, your partners are waiting.</p>
+    <p>The MatSafe team</p>
+    <p dir="rtl">اشتقنا لك! إذا كان لديك إصابة أو مشكلة يمكنك إخبارنا بسرية، وإذا كنت بخير ننتظرك في الحصة القادمة.</p>
+</div>
+        </field>
+    </record>
+
+    <!-- 4. Return: ask the member to confirm they are ready to come back -->
+    <record id="mail_template_return" model="mail.template">
+        <field name="name">MatSafe: Ready to return?</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="subject">MatSafe: are you ready to return?</field>
+        <field name="email_from">{{ (user.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.id }}</field>
+        <field name="lang">{{ object.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="font-family: Arial, sans-serif; font-size: 14px;">
+    <p>Hi <t t-out="object.name or ''">Member</t>,</p>
+    <p>Your minimum time off
+       <t t-if="object.open_report_id.min_return_date">(until <t t-out="object.open_report_id.min_return_date"/>)</t>
+       is over. We hope you are feeling better!</p>
+    <p>Please confirm you are ready to return by asking a head coach to clear you
+       before your next class. Your membership will be unpaused once you are cleared.</p>
+    <p>The MatSafe team</p>
+    <p dir="rtl">انتهت فترة الراحة. يرجى التأكد من جاهزيتك وطلب موافقة المدرب الرئيسي قبل العودة للتدريب.</p>
+</div>
+        </field>
+    </record>
+
+    </data>
+</odoo>
