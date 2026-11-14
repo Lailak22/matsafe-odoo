@@ -588,6 +588,8 @@
             </svg>
             <div id="ms-result-text" class="ms-result-text"></div>
             <div id="ms-result-detail" class="ms-result-detail"></div>
+            <!-- Green screen only: "RETURN TO PLAY: DRILLING ONLY" (empty = hidden) -->
+            <div id="ms-result-banner" class="ms-result-banner"></div>
         </div>
     </template>
 

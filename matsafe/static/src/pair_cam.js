@@ -7,6 +7,7 @@
     const MODEL_URL = '/matsafe/static/model/model.json';       // added by Person D
     const METADATA_URL = '/matsafe/static/model/metadata.json'; // added by Person D
     const PAIR_URL = '/matsafe/pair';
+    const MEMBER_URL = '/matsafe/pair/member';  // who a face is, and whether they sit out (return to play)
     const PREDICT_EVERY_MS = 300;    // one prediction every 300 ms
     const MIN_PROBABILITY = 0.90;    // the top class must be above this...
     const HOLD_MS = 1500;            // ...for 1.5 seconds in a row
@@ -81,8 +82,53 @@
         setStatus(STEP1_TEXT);
     }
 
+    // Odoo JSON-RPC call; returns data.result
+    async function rpc(url, params) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: params}),
+        });
+        const data = await response.json();
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+        return data.result;
+    }
+
+    // Members at return-to-play "no sparring" / "drilling" sit out, like in Make Pairs:
+    // say so on a red screen, save nothing, and start again with partner 1.
+    // Returns true when the member sits out. If the lookup fails, /matsafe/pair still refuses them.
+    async function sitsOut(label) {
+        let member;
+        try {
+            member = await rpc(MEMBER_URL, {face_label: label});
+        } catch (error) {
+            console.warn('MatSafe: member lookup failed', error);
+            return false;
+        }
+        if (!member.sits_out) {
+            return false;
+        }
+        clearTimeout(partner2Timer);
+        // "SITS OUT TODAY" / "DRILLING ONLY - SHAHD ELWARDANY"
+        showResult(false, 'Sits out today', member.sits_out + ' - ' + member.member_name);
+        ignoreUntil[label] = Date.now() + IGNORE_MS;  // they are probably still in front of the camera
+        setTimeout(function () {
+            hideResult();
+            busy = false;
+            startOver();
+        }, RESULT_MS);
+        return true;
+    }
+
     // A face was seen for 1.5 seconds in a row
-    function onFaceConfirmed(label) {
+    async function onFaceConfirmed(label) {
+        busy = true;  // no new faces while we look this one up
+        if (await sitsOut(label)) {
+            return;  // busy stays true until the red screen is gone
+        }
+        busy = false;
         if (partnerA === null) {
             // Step 1 done: remember partner 1 and wait up to 15 seconds for partner 2
             partnerA = label;
@@ -102,26 +148,13 @@
         busy = true;
         clearTimeout(partner2Timer);
         try {
-            // Odoo JSON-RPC: the arguments go inside "params", the answer comes back in "result"
-            const response = await fetch(PAIR_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    jsonrpc: '2.0',
-                    method: 'call',
-                    params: {face_label_a: labelA, face_label_b: labelB, session_id: sessionId},
-                }),
-            });
-            const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error.message);
-            }
-            if (data.result.result === 'saved') {
-                showResult(true, 'Pair saved', data.result.member_a_name + ' + ' + data.result.member_b_name);
+            const result = await rpc(PAIR_URL, {face_label_a: labelA, face_label_b: labelB, session_id: sessionId});
+            if (result.result === 'saved') {
+                showResult(true, 'Pair saved', result.member_a_name + ' + ' + result.member_b_name);
                 // Both are probably still standing there: do not start a new pair with them at once
                 ignoreUntil[labelA] = ignoreUntil[labelB] = Date.now() + IGNORE_MS;
             } else {
-                showResult(false, 'Not saved', data.result.reason);
+                showResult(false, 'Not saved', result.reason);
             }
         } catch (error) {
             console.warn('MatSafe: pair not saved', error);

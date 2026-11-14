@@ -46,6 +46,11 @@ RATE_STEPS = ["You", "Class", "Rate"]        # the 3-step bar of the rating page
 RATE_SCORES = ('1', '2', '3', '4', '5')
 RATE_SAVE_ERROR = "Sorry, your ratings could not be saved. Please tell a coach in person."
 
+# ---- Return to play on the kiosk and the pair camera ----------------------
+# res.partner.rtp_stage -> what the screens show. 'full' / empty: no restriction, no banner.
+RTP_LABELS = {'no_sparring': "NO SPARRING", 'drilling': "DRILLING ONLY", 'light_sparring': "LIGHT SPARRING ONLY"}
+SITS_OUT_STAGES = ('no_sparring', 'drilling')   # the same members Make Pairs leaves out
+
 
 class MatsafeWebsite(http.Controller):
 
@@ -600,7 +605,9 @@ class MatsafeWebsite(http.Controller):
             'result': result,
             'reason': reason,
         })
-        return {'result': result, 'member_name': member.name or '', 'reason': reason or ''}
+        return {'result': result, 'member_name': member.name or '', 'reason': reason or '',
+                # Return-to-play label for the banner on the green screen ('' = no banner)
+                'rtp_stage': RTP_LABELS.get(member.rtp_stage, '')}
 
     # ------------------------------------------------------------------
     # /matsafe/pair-cam?session_id=ID : pair two members with the camera
@@ -636,6 +643,10 @@ class MatsafeWebsite(http.Controller):
             reason = "Unknown member: %s" % (face_label_b if member_a else face_label_a)
         elif member_a == member_b:
             reason = "Two different partners are needed"
+        elif (member_a | member_b).filtered(lambda m: m.rtp_stage in SITS_OUT_STAGES):
+            # Return to play: these members sit out, like in Make Pairs
+            sits_out = (member_a | member_b).filtered(lambda m: m.rtp_stage in SITS_OUT_STAGES)[0]
+            reason = "Sits out today: %s (%s)" % (sits_out.name, RTP_LABELS[sits_out.rtp_stage])
         else:
             # No sudo: the logged-in user needs the coach right to create pairings
             request.env['matsafe.pairing'].create({
@@ -648,3 +659,14 @@ class MatsafeWebsite(http.Controller):
                     'member_b_name': member_b.name, 'reason': ''}
         return {'result': 'error', 'member_a_name': member_a.name or '',
                 'member_b_name': member_b.name or '', 'reason': reason}
+
+    # ------------------------------------------------------------------
+    # /matsafe/pair/member : who a recognised face is, and whether they sit out today
+    # (the pairing page asks right away, so it can say so before waiting for a partner)
+    # ------------------------------------------------------------------
+    @http.route('/matsafe/pair/member', type='jsonrpc', auth='user', methods=['POST'])
+    def pair_member(self, face_label=None, **kw):
+        member = self._find_member('face_label', face_label)
+        sits_out = member.rtp_stage in SITS_OUT_STAGES
+        return {'found': bool(member), 'member_name': member.name or '',
+                'sits_out': RTP_LABELS[member.rtp_stage] if sits_out else ''}

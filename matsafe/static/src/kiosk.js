@@ -22,6 +22,7 @@
     const resultEl = document.getElementById('ms-result');
     const resultTextEl = document.getElementById('ms-result-text');
     const resultDetailEl = document.getElementById('ms-result-detail');
+    const resultBannerEl = document.getElementById('ms-result-banner');
     const codeForm = document.getElementById('ms-code-form');
     const codeInput = document.getElementById('ms-code-input');
 
@@ -63,10 +64,12 @@
     }
 
     // ---- Result screen --------------------------------------------------
-    // title: "Welcome" / "Blocked"; detail: the member's name or the reason
-    function showResult(allowed, title, detail) {
+    // title: "Welcome" / "Blocked"; detail: the member's name or the reason;
+    // banner: the return-to-play bar under the name (green screen only, '' = none)
+    function showResult(allowed, title, detail, banner) {
         resultTextEl.textContent = title;  // textContent: names are never read as HTML
         resultDetailEl.textContent = detail || '';
+        resultBannerEl.textContent = allowed && banner ? 'Return to play: ' + banner : '';
         resultEl.className = 'ms-result ' + (allowed ? 'ms-allowed' : 'ms-blocked');
         resultEl.hidden = false;
     }
@@ -93,7 +96,8 @@
                 throw new Error(data.error.message);
             }
             if (data.result.result === 'allowed') {
-                showResult(true, 'Welcome', data.result.member_name);
+                // Still allowed in; the bar says what they may do on the mats
+                showResult(true, 'Welcome', data.result.member_name, data.result.rtp_stage);
             } else {
                 showResult(false, 'Blocked', data.result.reason);
             }
@@ -227,6 +231,9 @@
         } catch (error) {
             showLoadError('Camera not available', error);
             setStatus('Camera not available, use member code', true);
+            // Forget the half-made webcam: otherwise resumeScanning() (after every check-in)
+            // would start predicting on a camera that does not exist, every 500 ms
+            webcam = null;
             return;
         }
         cameraEl.appendChild(webcam.canvas);

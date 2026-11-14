@@ -557,6 +557,26 @@ body {
     font-size: clamp(3rem, 12vh, 10rem);
 }
 
+/* Return-to-play bar under the name on the green screen: white, dark bold text */
+.ms-result-banner {
+    margin-top: 3vh;
+    max-width: 90vw;
+    padding: 0.4em 1em 0.45em;
+    border-radius: 4px;
+    background: #ffffff;
+    color: var(--ms-ink);
+    font-size: clamp(1.6rem, 5vh, 3.8rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.03em;
+}
+
+.ms-result-banner:empty,
+.ms-blocked .ms-result-banner,
+.ms-saved .ms-result-banner {
+    display: none;
+}
+
 /* ---- People who turned animations off: the dot stays still ---- */
 @media (prefers-reduced-motion: reduce) {
     .ms-dot {
