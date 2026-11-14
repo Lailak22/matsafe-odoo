@@ -1,22 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Icon of one report card (line icons, drawn with the text colour) -->
+    <!-- Icon of one report card (line icons, drawn with the text colour = the card's accent) -->
     <template id="report_icon" name="MatSafe: Report Card Icon">
         <svg class="mr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <!-- skin: drop -->
-            <path t-if="kind['key'] == 'skin'" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-            <!-- sick: thermometer -->
-            <path t-elif="kind['key'] == 'sick'" d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
-            <!-- injury: pulse line -->
-            <polyline t-elif="kind['key'] == 'injury'" points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            <!-- head knock: flash -->
-            <polygon t-elif="kind['key'] == 'head'" points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            <!-- unsafe partner: shield -->
-            <path t-elif="kind['key'] == 'unsafe'" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <!-- skin: a patch with spots -->
+            <t t-if="kind['key'] == 'skin'">
+                <path d="M12 3c4.5 0 8 2.9 8 7.6 0 5-3.8 10.4-8 10.4s-8-5.4-8-10.4C4 5.9 7.5 3 12 3z"/>
+                <path d="M9 10h.01M14.5 9h.01M13.5 14h.01"/>
+            </t>
+            <!-- sick: thermometer with heat lines -->
+            <t t-elif="kind['key'] == 'sick'">
+                <path d="M11 14.76V4.5a2.5 2.5 0 0 1 5 0v10.26a4.5 4.5 0 1 1-5 0z"/>
+                <circle cx="13.5" cy="18" r="1.4"/>
+                <path d="M13.5 16.5V9"/>
+                <path d="M4 6.5h3M4 10.5h3M4 14.5h2"/>
+            </t>
+            <!-- injury: plaster -->
+            <t t-elif="kind['key'] == 'injury'">
+                <rect x="2.2" y="8.3" width="19.6" height="7.4" rx="3.7" transform="rotate(-45 12 12)"/>
+                <rect x="9.2" y="9.2" width="5.6" height="5.6" rx="0.8" transform="rotate(-45 12 12)"/>
+            </t>
+            <!-- head knock: head with an impact star -->
+            <t t-elif="kind['key'] == 'head'">
+                <path d="M15.5 21v-3.2h2a1.5 1.5 0 0 0 1.5-1.5v-2.6l1.6-.8-1.6-3.4A7 7 0 1 0 8 15.4V21"/>
+                <path d="M11 6.5l.8 1.9 2-.4-1 1.8 1.4 1.4-2 .1-.4 2-1.2-1.6-1.8 1 .4-2-1.7-1.1 2-.5z"/>
+            </t>
+            <!-- unsafe partner / incident: shield with an exclamation mark -->
+            <t t-elif="kind['key'] == 'unsafe'">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M12 7.5v5"/>
+                <circle cx="12" cy="16" r="1.1"/>
+            </t>
             <!-- facility: wrench -->
             <path t-else="" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
         </svg>
+    </template>
+
+    <!-- Top of every report page: shield + wordmark + tagline, then the 3-step progress bar.
+         progress_at: choose / details / send / done (report.js moves it on the form); empty: no bar. -->
+    <template id="report_top" name="MatSafe: Report Page Top">
+        <!-- Mat tape: the one red and black stripe of the page -->
+        <div class="mr-tape" aria-hidden="true"/>
+        <header class="mr-top">
+            <a class="mr-logo" href="/matsafe/report">MatSafe</a>
+            <p class="mr-tagline">Safe mats. Safe partners.</p>
+        </header>
+        <!-- Scoreboard steps: the red bar sits under the current one -->
+        <ol t-if="progress_at" id="mr-progress" class="mr-progress" t-att-data-at="progress_at" aria-label="Progress">
+            <li data-step="choose"><span class="mr-progress-label"><b>01</b> Choose</span><span class="mr-progress-bar"/></li>
+            <li data-step="details"><span class="mr-progress-label"><b>02</b> Details</span><span class="mr-progress-bar"/></li>
+            <li data-step="send"><span class="mr-progress-label"><b>03</b> Send</span><span class="mr-progress-bar"/></li>
+        </ol>
+    </template>
+
+    <!-- Big round icon at the top of the thank-you and confirmation pages -->
+    <template id="report_badge" name="MatSafe: Report Page Badge">
+        <div t-attf-class="mr-badge #{badge == 'invalid' and 'mr-badge-muted' or ''}">
+            <svg class="mr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <!-- mail: waiting for the confirmation email -->
+                <t t-if="badge == 'mail'">
+                    <rect x="3" y="5" width="18" height="14" rx="2.5"/>
+                    <polyline points="3.5 6.5 12 13 20.5 6.5"/>
+                </t>
+                <!-- shield: confirm your report -->
+                <t t-elif="badge == 'shield'">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <polyline points="8.5 12 11 14.5 15.5 9.5"/>
+                </t>
+                <!-- invalid link -->
+                <t t-elif="badge == 'invalid'">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 7.5v5.5"/>
+                    <path d="M12 16.5v.01"/>
+                </t>
+                <polyline t-else="" points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
     </template>
 
     <!-- /matsafe/report : public "Report something" page (mobile first).
@@ -32,9 +93,9 @@
         <link rel="stylesheet" t-attf-href="/matsafe/static/src/report.css?v=#{asset_version}"/>
     </head>
     <body>
-        <header class="mr-top">
-            <a class="mr-logo" href="/matsafe/report">Mat<span>Safe</span></a>
-        </header>
+        <t t-call="matsafe.report_top">
+            <t t-set="progress_at" t-value="'details' if values.get('kind') else 'choose'"/>
+        </t>
 
         <main class="mr-page">
             <h1 class="mr-title">Report something</h1>
@@ -59,6 +120,10 @@
                                t-att-data-code="kind['needs_code'] and '1'"
                                t-att-data-consent="kind['needs_consent'] and '1'"/>
                         <span class="mr-card-icon"><t t-call="matsafe.report_icon"/></span>
+                        <span class="mr-card-check" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"
+                                 stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
                         <span class="mr-card-text">
                             <span class="mr-card-title" t-out="kind['title']"/>
                             <span class="mr-card-arabic" lang="ar" dir="rtl" t-out="kind['arabic']"/>
@@ -174,32 +239,34 @@
         <link rel="stylesheet" t-attf-href="/matsafe/static/src/report.css?v=#{asset_version}"/>
     </head>
     <body>
-        <header class="mr-top">
-            <a class="mr-logo" href="/matsafe/report">Mat<span>Safe</span></a>
-        </header>
+        <t t-call="matsafe.report_top">
+            <t t-set="progress_at" t-value="'done'"/>
+        </t>
 
         <main class="mr-page mr-thanks">
-            <div class="mr-thanks-icon">
-                <svg class="mr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12"/>
-                </svg>
-            </div>
+            <t t-call="matsafe.report_badge">
+                <t t-set="badge" t-value="'mail' if done.get('pending') else 'check'"/>
+            </t>
 
             <!-- The report waits for the member's confirmation: nothing else has happened yet.
                  The wording also fits when no email arrives. -->
             <t t-if="done.get('pending')">
                 <h1 class="mr-title">Almost done</h1>
                 <p class="mr-lead">Your report is saved and waits for your confirmation.</p>
-                <p class="mr-text">
+                <!-- Demo mode (system parameter matsafe.demo_mode = 1): the link of the email as a button -->
+                <t t-if="done.get('demo_link')">
+                    <a class="mr-submit mr-demo" t-att-href="done['demo_link']">Demo: open the confirmation email</a>
+                    <p class="mr-text mr-demo-note">Demo mode: in real use this link only arrives by email.</p>
+                </t>
+                <p t-else="" class="mr-text">
                     Check your email to confirm your report. No email? Tell a coach, so they can confirm it for you.
                 </p>
                 <p class="mr-text">Nothing changes for you or your training partners until it is confirmed.</p>
                 <p t-if="kind.get('note')" class="mr-note" t-out="kind['note']"/>
             </t>
 
-            <!-- Cards 1 to 4 when the report is open at once (matsafe.report without a
-                 confirmation step): its chain has already run -->
+            <!-- Cards 1 to 4 once the report is open (after the confirmation link):
+                 its chain has run -->
             <t t-elif="kind['save_as'] == 'report'">
                 <h1 class="mr-title">Thank you</h1>
                 <t t-set="health" t-value="kind['key'] in ('skin', 'sick')"/>
@@ -247,6 +314,60 @@
             </t>
 
             <a class="mr-submit mr-again" href="/matsafe/report">Report something else</a>
+        </main>
+    </body>
+</html>
+    </template>
+
+    <!-- /matsafe/report/confirm/<token> : opened from the confirmation email.
+         Opening the link changes nothing; the button sends a POST and that confirms the report.
+         `kind` is empty when the link is wrong or was already used. -->
+    <template id="report_confirm" name="MatSafe: Confirm Report">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <!-- The address of this page holds the token: keep it out of search engines and other sites -->
+        <meta name="robots" content="noindex"/>
+        <meta name="referrer" content="no-referrer"/>
+        <title>Confirm your report | MatSafe</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/report.css?v=#{asset_version}"/>
+    </head>
+    <body>
+        <t t-call="matsafe.report_top">
+            <t t-set="progress_at" t-value="kind and 'send'"/>
+        </t>
+
+        <main class="mr-page mr-thanks">
+            <t t-call="matsafe.report_badge">
+                <t t-set="badge" t-value="'shield' if kind else 'invalid'"/>
+            </t>
+            <t t-if="kind">
+                <h1 class="mr-title">Confirm your report</h1>
+                <p class="mr-lead">You sent a report: <strong t-out="kind['title']"/>.</p>
+                <p class="mr-text">
+                    Tap the button to confirm it was you. The gym's safety rules for this report start
+                    once you confirm.
+                </p>
+
+                <div t-if="error" class="mr-errors" role="alert">
+                    <p t-out="error"/>
+                </div>
+
+                <form class="mr-confirm" t-attf-action="/matsafe/report/confirm/#{token}" method="post">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <button type="submit" class="mr-submit">Confirm my report</button>
+                </form>
+
+                <p class="mr-text">If you did not send this report, close this page and tell a coach.</p>
+                <p t-if="kind.get('note')" class="mr-note" t-out="kind['note']"/>
+            </t>
+            <t t-else="">
+                <h1 class="mr-title">This link is no longer valid</h1>
+                <p class="mr-lead">If you already confirmed your report, there is nothing more to do.</p>
+                <p class="mr-text">Otherwise please tell a coach in person.</p>
+                <a class="mr-submit mr-again" href="/matsafe/report">Report something</a>
+            </t>
         </main>
     </body>
 </html>

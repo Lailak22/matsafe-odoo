@@ -27,6 +27,22 @@
     const consentField = document.getElementById('mr-consent-field');
     const sessionSelect = form.querySelector('.mr-session');
     const submitButton = document.getElementById('mr-submit');
+    const progress = document.getElementById('mr-progress');
+
+    // The 3-step bar at the top: choose / details / send
+    function setProgress(step) {
+        if (!progress) {
+            return;
+        }
+        progress.dataset.at = step;
+        progress.querySelectorAll('li').forEach(function (item) {
+            if (item.dataset.step === step) {
+                item.setAttribute('aria-current', 'step');
+            } else {
+                item.removeAttribute('aria-current');
+            }
+        });
+    }
 
     function chosenKind() {
         return form.querySelector('input[name="kind"]:checked');
@@ -45,6 +61,7 @@
         // report.css shows / hides the "optional" texts and the consent box from these
         form.dataset.code = chosen && chosen.dataset.code ? '1' : '0';
         form.dataset.consent = chosen && chosen.dataset.consent ? '1' : '0';
+        setProgress(chosen ? 'details' : 'choose');
 
         kindInputs.forEach(function (input) {
             input.closest('.mr-card').classList.toggle('mr-card-on', input === chosen);
@@ -212,6 +229,7 @@
             return;
         }
         // No double sending
+        setProgress('send');
         submitButton.disabled = true;
         submitButton.textContent = 'Sending...';
     });

@@ -1,15 +1,42 @@
-/* MatSafe "Report something" page: phone first, calm colours, big touch targets */
+/* MatSafe "Report something" pages.
+   Brand: gym signage and fight posters. Warm off-white, near-black ink, ONE colour: mat red.
+   Flat: confident 2px borders, no gradients, no glows, no shadows. Typography does the work.
+   Phone first (390px), big touch targets, WCAG AA contrast. */
+
+/* ---- Fonts: bundled with Odoo (web module), so no CDN and they work offline ---- */
+@font-face {
+    font-family: "MatSafe Display";        /* Oswald: condensed, for headings, labels, buttons */
+    src: url("/web/static/fonts/google/Oswald/Oswald-SemiBold.ttf") format("truetype");
+    font-weight: 500 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MatSafe Display";
+    src: url("/web/static/fonts/google/Oswald/Oswald-Bold.ttf") format("truetype");
+    font-weight: 700 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MatSafe Arabic";         /* Tajawal: the Arabic subtitles */
+    src: url("/web/static/fonts/google/Tajawal/Tajawal-Medium.ttf") format("truetype");
+    font-weight: 400 600;
+    font-display: swap;
+}
 
 :root {
-    --mr-bg: #f5f6f3;
-    --mr-card: #ffffff;
-    --mr-text: #1f2933;
-    --mr-muted: #5b6770;
-    --mr-line: #d8dcd6;
-    --mr-main: #0f766e;        /* calm teal: buttons and picked choices */
-    --mr-main-soft: #e6f4f1;
-    --mr-warn: #8a5a00;        /* problems and safety lines: amber, not red */
-    --mr-warn-soft: #fff6dd;
+    color-scheme: light;
+    --mr-bg: #f4f1ea;          /* warm off-white */
+    --mr-paper: #ffffff;       /* cards and inputs */
+    --mr-ink: #111111;         /* text and borders */
+    --mr-muted: #5c574f;       /* 6:1 on the background, 7:1 on white */
+    --mr-hover: #ebe6db;       /* hover fill */
+    --mr-red: #d7261e;         /* mat red: the only colour. White on it: 5.3:1 */
+    --mr-red-dark: #b01e17;
+    --mr-radius: 4px;
+    --mr-display: "MatSafe Display", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --mr-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Arabic", sans-serif;
 }
 
 * {
@@ -18,67 +45,183 @@
 
 html {
     -webkit-text-size-adjust: 100%;
+    background: var(--mr-bg);
 }
 
 body {
     margin: 0;
+    min-height: 100vh;
     background: var(--mr-bg);
-    color: var(--mr-text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif;
-    font-size: 17px;
-    line-height: 1.45;
+    color: var(--mr-ink);
+    font-family: var(--mr-body);
+    font-size: 17px;           /* 16px or more: phones do not zoom in on inputs */
+    line-height: 1.5;
 }
 
-/* ---- Top bar and page ---- */
+/* ---- Mat tape: one red and black stripe across the top ---- */
+.mr-tape {
+    height: 6px;
+    background: repeating-linear-gradient(90deg,
+        var(--mr-red) 0 40px, var(--mr-ink) 40px 48px);
+}
+
+/* ---- Header: big heavy wordmark with a red tape line under it ---- */
 .mr-top {
-    padding: 14px 20px;
-    background: var(--mr-card);
-    border-bottom: 1px solid var(--mr-line);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px 16px;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 22px 16px 0;
 }
 
 .mr-logo {
-    font-size: 1.35rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: var(--mr-text);
+    position: relative;
+    display: inline-block;
+    padding-bottom: 8px;
+    color: var(--mr-ink);
+    font-family: var(--mr-display);
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
     text-decoration: none;
 }
 
-.mr-logo span {
-    color: var(--mr-main);
+.mr-logo::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: var(--mr-red);
 }
 
+.mr-tagline {
+    margin: 0 0 10px;
+    font-family: var(--mr-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mr-muted);
+}
+
+/* ---- Scoreboard steps: 01 CHOOSE / 02 DETAILS / 03 SEND ---- */
+.mr-progress {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 648px;
+    margin: 22px auto 0;
+    padding: 0;
+    list-style: none;
+    border-top: 2px solid var(--mr-ink);
+    border-bottom: 2px solid var(--mr-ink);
+}
+
+/* 16px side gutter on phones */
+@media (max-width: 679px) {
+    .mr-progress {
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+}
+
+.mr-progress li {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mr-progress li + li {
+    border-left: 2px solid var(--mr-ink);
+}
+
+.mr-progress-label {
+    padding: 10px 10px 8px;
+    font-family: var(--mr-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--mr-muted);
+}
+
+.mr-progress-label b {
+    margin-right: 4px;
+    font-weight: 700;
+}
+
+.mr-progress-bar {
+    display: block;
+    height: 5px;
+    margin-top: auto;
+}
+
+/* Done steps: ink */
+.mr-progress[data-at="details"] [data-step="choose"] .mr-progress-label,
+.mr-progress[data-at="send"] [data-step="choose"] .mr-progress-label,
+.mr-progress[data-at="send"] [data-step="details"] .mr-progress-label,
+.mr-progress[data-at="done"] .mr-progress-label {
+    color: var(--mr-ink);
+}
+
+/* Current step: ink label, red bar */
+.mr-progress[data-at="choose"] [data-step="choose"] .mr-progress-label,
+.mr-progress[data-at="details"] [data-step="details"] .mr-progress-label,
+.mr-progress[data-at="send"] [data-step="send"] .mr-progress-label {
+    color: var(--mr-ink);
+}
+
+.mr-progress[data-at="choose"] [data-step="choose"] .mr-progress-bar,
+.mr-progress[data-at="details"] [data-step="details"] .mr-progress-bar,
+.mr-progress[data-at="send"] [data-step="send"] .mr-progress-bar {
+    background: var(--mr-red);
+}
+
+/* ---- Page ---- */
 .mr-page {
-    max-width: 640px;
+    max-width: 680px;
     margin: 0 auto;
-    padding: 20px 16px 48px;
+    padding: 28px 16px 56px;
 }
 
 .mr-title {
-    margin: 4px 0 6px;
-    font-size: 1.7rem;
-    line-height: 1.2;
+    margin: 0 0 10px;
+    font-family: var(--mr-display);
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
 }
 
 .mr-lead {
-    margin: 0 0 16px;
+    margin: 0 0 24px;
     font-size: 1.05rem;
-    color: var(--mr-muted);
+    color: var(--mr-ink);
 }
 
 .mr-text {
     margin: 0 0 12px;
+    color: var(--mr-muted);
 }
 
-/* ---- Messages ---- */
+/* ---- Messages: white box, ink border, red bar on the left ---- */
 .mr-errors,
 .mr-note {
-    margin: 0 0 16px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1px solid #ecd9a0;
-    background: var(--mr-warn-soft);
-    color: var(--mr-warn);
+    margin: 0 0 20px;
+    padding: 12px 14px 12px 16px;
+    background: var(--mr-paper);
+    border: 2px solid var(--mr-ink);
+    border-left: 8px solid var(--mr-red);
+    border-radius: var(--mr-radius);
+    color: var(--mr-ink);
     font-weight: 600;
 }
 
@@ -100,29 +243,36 @@ fieldset {
 
 .mr-step,
 .mr-kind-title {
-    margin: 0 0 10px;
+    margin: 0 0 12px;
     padding: 0;
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-family: var(--mr-display);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 .mr-cards {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
 .mr-card {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 14px;
-    min-height: 76px;
-    padding: 12px 14px;
-    background: var(--mr-card);
-    border: 2px solid var(--mr-line);
-    border-radius: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+    min-height: 160px;
+    padding: 14px;
+    background: var(--mr-paper);
+    border: 2px solid var(--mr-ink);
+    border-radius: 6px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.12s, border-color 0.12s, box-shadow 0.12s;
 }
 
 /* The radio button itself is hidden; the whole card is the button */
@@ -133,127 +283,221 @@ fieldset {
     pointer-events: none;
 }
 
-.mr-card:hover,
-.mr-card:focus-within {
-    border-color: var(--mr-main);
+@media (hover: hover) {
+    .mr-card:hover {
+        background: var(--mr-hover);
+    }
 }
 
-/* Picked card (class set by report.js) */
-.mr-card.mr-card-on {
-    border-color: var(--mr-main);
-    background: var(--mr-main-soft);
+.mr-card:focus-within {
+    outline: 3px solid var(--mr-ink);
+    outline-offset: 2px;
+}
+
+/* Picked card: red outline with a thick red left edge and a small check.
+   Class set by report.js; :has() also covers a page without JavaScript. */
+.mr-card.mr-card-on,
+.mr-card:has(input:checked) {
+    background: var(--mr-paper);
+    border-color: var(--mr-red);
+    box-shadow: inset 6px 0 0 var(--mr-red);
 }
 
 .mr-card-icon {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--mr-main-soft);
-    color: var(--mr-main);
-}
-
-.mr-card.mr-card-on .mr-card-icon {
-    background: var(--mr-main);
-    color: #ffffff;
+    color: var(--mr-ink);
 }
 
 .mr-icon {
-    width: 26px;
-    height: 26px;
+    width: 34px;
+    height: 34px;
+}
+
+.mr-card-check {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    background: var(--mr-red);
+    color: #ffffff;
+}
+
+.mr-card-check svg {
+    width: 15px;
+    height: 15px;
+}
+
+.mr-card.mr-card-on .mr-card-check,
+.mr-card:has(input:checked) .mr-card-check {
+    display: flex;
 }
 
 .mr-card-text {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    width: 100%;
 }
 
 .mr-card-title {
-    font-size: 1.1rem;
+    font-family: var(--mr-display);
+    font-size: 1.2rem;
     font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
 }
 
 .mr-card-arabic {
-    font-size: 0.95rem;
+    margin-top: 4px;
+    font-family: "MatSafe Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+    font-size: 0.98rem;
     color: var(--mr-muted);
     text-align: left;   /* stays under the English title */
 }
 
 .mr-card-examples {
-    margin-top: 2px;
-    font-size: 0.85rem;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    line-height: 1.35;
     color: var(--mr-muted);
+    overflow-wrap: anywhere;
 }
 
 /* ---- Step 2: the questions ---- */
 .mr-fill {
-    margin-top: 18px;
+    margin-top: 16px;
 }
 
 .mr-change {
-    margin: 0 0 18px;
-    padding: 10px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 26px;
+    padding: 8px 14px;
     min-height: 44px;
-    border: 0;
-    background: none;
-    color: var(--mr-main);
-    font: inherit;
-    font-weight: 700;
-    text-decoration: underline;
+    border: 2px solid var(--mr-ink);
+    border-radius: var(--mr-radius);
+    background: transparent;
+    color: var(--mr-ink);
+    font-family: var(--mr-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     cursor: pointer;
 }
 
+.mr-change::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-left: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+}
+
+.mr-change:hover {
+    background: var(--mr-hover);
+}
+
+.mr-change:focus-visible {
+    outline: 3px solid var(--mr-ink);
+    outline-offset: 2px;
+}
+
 .mr-field {
-    margin: 0 0 20px;
+    margin: 0 0 26px;
 }
 
 .mr-label {
     display: block;
     margin: 0 0 8px;
     padding: 0;
-    font-weight: 700;
+    font-family: var(--mr-display);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .mr-optional {
+    font-family: var(--mr-body);
+    font-size: 0.85rem;
     font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
     color: var(--mr-muted);
 }
 
 .mr-hint {
     margin: 6px 0 0;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--mr-muted);
 }
 
 legend + .mr-hint {
-    margin: -4px 0 8px;
+    margin: -2px 0 10px;
 }
 
 .mr-input {
     display: block;
     width: 100%;
-    min-height: 52px;
+    min-height: 54px;
     padding: 12px 14px;
-    background: var(--mr-card);
-    border: 2px solid var(--mr-line);
-    border-radius: 12px;
-    color: var(--mr-text);
-    font: inherit;   /* 17px: phones do not zoom in on focus */
+    background: var(--mr-paper);
+    border: 2px solid var(--mr-ink);
+    border-radius: var(--mr-radius);
+    color: var(--mr-ink);
+    font: inherit;
+}
+
+.mr-input:focus {
+    outline: 2px solid var(--mr-red);
+    outline-offset: 0;
+    border-color: var(--mr-red);
 }
 
 textarea.mr-input {
     resize: vertical;
+    min-height: 110px;
 }
 
-.mr-input:focus {
-    outline: none;
-    border-color: var(--mr-main);
+select.mr-input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 44px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2.5' stroke-linecap='square'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 18px;
 }
 
-/* Choices as big buttons */
+.mr-photo {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+}
+
+.mr-photo::file-selector-button {
+    margin-right: 12px;
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 3px;
+    background: var(--mr-ink);
+    color: #ffffff;
+    font-family: var(--mr-display);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+/* ---- Pills: outlined, square-ish, solid black when picked ---- */
 .mr-chips {
     display: flex;
     flex-wrap: wrap;
@@ -264,95 +508,176 @@ textarea.mr-input {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     min-height: 48px;
-    padding: 8px 16px;
-    background: var(--mr-card);
-    border: 2px solid var(--mr-line);
-    border-radius: 999px;
+    padding: 10px 14px;
+    background: var(--mr-paper);
+    border: 2px solid var(--mr-ink);
+    border-radius: var(--mr-radius);
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.12s, color 0.12s;
+}
+
+@media (hover: hover) {
+    .mr-chip:hover input:not(:checked) + span {
+        background: var(--mr-hover);
+    }
 }
 
 .mr-chip input:checked + span {
-    background: var(--mr-main);
-    border-color: var(--mr-main);
+    background: var(--mr-ink);
     color: #ffffff;
-    font-weight: 700;
 }
 
 .mr-chip input:focus-visible + span {
-    outline: 3px solid var(--mr-main-soft);
+    outline: 3px solid var(--mr-red);
     outline-offset: 2px;
 }
 
-/* 1 to 5: five equal buttons in one row */
+/* "Tick several": a small square that becomes a tick */
+.mr-field[data-widget="checks"] .mr-chip span::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-radius: 2px;
+}
+
+.mr-field[data-widget="checks"] .mr-chip input:checked + span::before {
+    width: 6px;
+    height: 12px;
+    margin: -3px 3px 0 4px;
+    border-width: 0 3px 3px 0;
+    border-radius: 0;
+    transform: rotate(45deg);
+}
+
+/* Pain level 1 to 5: five equal blocks; 4 and 5 turn red */
 .mr-scale {
     flex-wrap: nowrap;
 }
 
 .mr-scale .mr-chip {
     flex: 1 1 0;
+    min-width: 0;
 }
 
 .mr-scale .mr-chip span {
-    padding: 8px 0;
-    border-radius: 12px;
-    font-size: 1.15rem;
+    min-height: 56px;
+    padding: 6px 0;
+    font-family: var(--mr-display);
+    font-size: 1.5rem;
     font-weight: 700;
 }
 
-/* Consent */
+.mr-scale .mr-chip:nth-child(n+4) input:checked + span {
+    background: var(--mr-red);
+    border-color: var(--mr-red);
+}
+
+/* ---- Consent ---- */
 .mr-consent {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 14px;
     padding: 14px;
-    background: var(--mr-card);
-    border: 2px solid var(--mr-line);
-    border-radius: 12px;
+    background: var(--mr-paper);
+    border: 2px solid var(--mr-ink);
+    border-radius: var(--mr-radius);
+    font-size: 0.95rem;
     cursor: pointer;
 }
 
 .mr-consent input {
-    flex: 0 0 24px;
-    width: 24px;
-    height: 24px;
+    appearance: none;
+    -webkit-appearance: none;
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
     margin: 0;
-    accent-color: var(--mr-main);
+    border: 2px solid var(--mr-ink);
+    border-radius: 3px;
+    background: var(--mr-paper);
+    cursor: pointer;
+}
+
+.mr-consent input:checked {
+    background: var(--mr-ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='square'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+
+.mr-consent input:focus-visible {
+    outline: 3px solid var(--mr-red);
+    outline-offset: 2px;
 }
 
 /* A problem found by report.js, under its question */
 .mr-problem {
     margin: 8px 0 0;
-    color: var(--mr-warn);
+    color: var(--mr-red-dark);    /* 6.9:1 on the background */
     font-weight: 700;
 }
 
 .mr-field-bad .mr-input,
-.mr-field-bad .mr-consent {
-    border-color: #d9a400;
+.mr-field-bad .mr-consent,
+.mr-field-bad .mr-chip span {
+    border-color: var(--mr-red);
 }
 
+/* ---- Main button: solid red, bold uppercase ---- */
 .mr-submit {
     display: block;
     width: 100%;
-    min-height: 56px;
+    min-height: 60px;
+    margin-top: 8px;
     padding: 14px 20px;
-    border: 0;
-    border-radius: 14px;
-    background: var(--mr-main);
+    border: 2px solid var(--mr-red);
+    border-radius: var(--mr-radius);
+    background: var(--mr-red);
     color: #ffffff;
-    font: inherit;
-    font-size: 1.15rem;
+    font-family: var(--mr-display);
+    font-size: 1.35rem;
     font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
+    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.mr-submit:hover {
+    background: var(--mr-red-dark);
+    border-color: var(--mr-red-dark);
+}
+
+.mr-submit:focus-visible {
+    outline: 3px solid var(--mr-ink);
+    outline-offset: 2px;
 }
 
 .mr-submit:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
+    cursor: default;
+}
+
+/* Secondary buttons (demo link, "Report something else"): outlined black */
+.mr-submit.mr-again,
+.mr-submit.mr-demo {
+    background: transparent;
+    border-color: var(--mr-ink);
+    color: var(--mr-ink);
+}
+
+.mr-submit.mr-again:hover,
+.mr-submit.mr-demo:hover {
+    background: var(--mr-ink);
+    color: #ffffff;
 }
 
 /* ---- What report.js switches (class mr-js is set on <html> by report.js;
@@ -368,52 +693,109 @@ textarea.mr-input {
     display: none;
 }
 
-/* ---- Thank-you page ---- */
-.mr-thanks {
-    padding-top: 36px;
-    text-align: center;
+/* Questions step: the picked card becomes one row at the top */
+.mr-js form[data-step="fill"] .mr-cards {
+    grid-template-columns: 1fr;
 }
 
-.mr-thanks-icon {
+.mr-js form[data-step="fill"] .mr-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    min-height: 0;
+    padding: 14px 44px 14px 20px;
+}
+
+/* ---- Thank-you and confirmation pages: poster style ---- */
+.mr-thanks {
+    padding-top: 32px;
+}
+
+.mr-badge {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 72px;
     height: 72px;
-    margin: 0 auto 16px;
-    border-radius: 50%;
-    background: var(--mr-main-soft);
-    color: var(--mr-main);
+    margin: 0 0 20px;
+    border: 2px solid var(--mr-ink);
+    border-radius: 6px;
+    background: var(--mr-paper);
+    color: var(--mr-ink);
 }
 
-.mr-thanks-icon .mr-icon {
-    width: 36px;
-    height: 36px;
+.mr-badge .mr-icon {
+    width: 38px;
+    height: 38px;
 }
 
-.mr-thanks .mr-lead {
-    color: var(--mr-text);
+.mr-badge-muted {
+    border-color: var(--mr-muted);
+    color: var(--mr-muted);
 }
 
-.mr-thanks .mr-note {
-    text-align: left;
+.mr-thanks .mr-title {
+    font-size: 3rem;
+}
+
+.mr-thanks .mr-lead strong {
+    font-weight: 700;
+    box-shadow: inset 0 -4px 0 var(--mr-red);   /* red tape under the report type */
 }
 
 .mr-again {
-    margin-top: 28px;
+    margin-top: 32px;
 }
 
-/* ---- Wider screens: cards in two columns ---- */
-@media (min-width: 560px) {
+.mr-confirm {
+    margin: 26px 0 18px;
+}
+
+.mr-demo {
+    margin: 22px 0 8px;
+    font-size: 1.1rem;
+}
+
+.mr-demo-note {
+    font-size: 0.85rem;
+}
+
+/* ---- Very narrow phones: one card per row ---- */
+@media (max-width: 339px) {
     .mr-cards {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .mr-cards .mr-step {
-        grid-column: 1 / -1;
-    }
-
-    .mr-js form[data-step="fill"] .mr-cards {
         grid-template-columns: 1fr;
+    }
+
+    .mr-card {
+        min-height: 0;
+    }
+}
+
+/* ---- Wider screens ---- */
+@media (min-width: 560px) {
+    .mr-logo {
+        font-size: 3rem;
+    }
+
+    .mr-title {
+        font-size: 3.4rem;
+    }
+
+    .mr-thanks .mr-title {
+        font-size: 3.8rem;
+    }
+
+    .mr-cards {
+        gap: 12px;
+    }
+
+    .mr-card {
+        padding: 18px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
     }
 }
