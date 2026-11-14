@@ -3,6 +3,9 @@
 <odoo noupdate="1">
 
     <!-- ================= MEMBERS ================= -->
+    <!-- The first 4 are the team; face_label = class name in static/model/metadata.json.
+         All record ids (member_omar, member_khalid, ...) keep their old names so the pairings
+         and check-ins below still link. -->
     <record id="member_omar" model="res.partner">
         <field name="name">Laila Elsayed</field>
         <field name="email">laila.elsayed@example.com</field>
