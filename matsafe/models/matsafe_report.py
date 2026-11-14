@@ -18,7 +18,7 @@ class MatsafeReport(models.Model):
         ('injury', 'Injury'),
         ('other', 'Other'),
     ], string="Type", required=True, default='other')
-    description = fields.Text()  # TODO (security pass): restrict to matsafe.group_head_coach
+    description = fields.Text(groups="matsafe.group_head_coach")  # private: head coaches only
     date = fields.Datetime(default=fields.Datetime.now)
     state = fields.Selection([
         ('open', 'Open'),
