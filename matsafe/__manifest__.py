@@ -1,13 +1,15 @@
 {
-    'name': "My Module",                 # TODO: rename
-    'version': '1.0',
-    'summary': "Short one-line description",
-    'category': 'Uncategorized',
-    'depends': ['base'],                 # add e.g. 'mail', 'product', 'maintenance'
+    'name': "MatSafe",
+    'version': '19.0.1.0.0',
+    'summary': "Contact tracing, check-in blocks, mat cleaning and membership pauses for martial arts gyms",
+    'author': "MatSafe",
+    'category': 'Sports',
+    'depends': ['base', 'contacts', 'mail', 'website', 'project', 'stock', 'account'],
     'data': [
-        # Order matters: security first, then views (actions), then menus
+        # Order matters: groups first, then access rights, then data, then views/menus
+        'security/matsafe_security.xml',
         'security/ir.model.access.csv',
-        'views/my_model_views.xml',
+        'data/cron.xml',
         'views/menus.xml',
     ],
     'installable': True,

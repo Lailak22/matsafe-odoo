@@ -1,2 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_my_model,access_my_model,model_my_model,base.group_user,1,1,1,1
+access_matsafe_session_user,matsafe.session user,model_matsafe_session,base.group_user,1,1,1,1
+access_matsafe_pairing_user,matsafe.pairing user,model_matsafe_pairing,base.group_user,1,1,1,1
+access_matsafe_report_user,matsafe.report user,model_matsafe_report,base.group_user,1,1,1,1
+access_matsafe_cluster_user,matsafe.cluster user,model_matsafe_cluster,base.group_user,1,1,1,1
+access_matsafe_checkin_user,matsafe.checkin user,model_matsafe_checkin,base.group_user,1,1,1,1
+access_matsafe_gear_user,matsafe.gear user,model_matsafe_gear,base.group_user,1,1,1,1
