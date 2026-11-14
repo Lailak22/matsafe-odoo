@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Icon of one report card (line icons, drawn with the text colour) -->
+    <template id="report_icon" name="MatSafe: Report Card Icon">
+        <svg class="mr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <!-- skin: drop -->
+            <path t-if="kind['key'] == 'skin'" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            <!-- sick: thermometer -->
+            <path t-elif="kind['key'] == 'sick'" d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+            <!-- injury: pulse line -->
+            <polyline t-elif="kind['key'] == 'injury'" points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            <!-- head knock: flash -->
+            <polygon t-elif="kind['key'] == 'head'" points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            <!-- unsafe partner: shield -->
+            <path t-elif="kind['key'] == 'unsafe'" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <!-- facility: wrench -->
+            <path t-else="" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+    </template>
+
+    <!-- /matsafe/report : public "Report something" page (mobile first).
+         Standalone HTML like the kiosk: no website header/footer, own CSS and JS.
+         The 6 cards and all their questions come from controllers/report_kinds.py.
+         Step 1: pick a card. Step 2: report.js shows only that card's questions. Step 3: send. -->
+    <template id="report_form" name="MatSafe: Report Form">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Report something | MatSafe</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/report.css?v=#{asset_version}"/>
+    </head>
+    <body>
+        <header class="mr-top">
+            <a class="mr-logo" href="/matsafe/report">Mat<span>Safe</span></a>
+        </header>
+
+        <main class="mr-page">
+            <h1 class="mr-title">Report something</h1>
+            <p class="mr-lead">Tell us what is going on. It takes about a minute.</p>
+
+            <!-- Problems found by the controller (missing answer, details not matched...) -->
+            <div t-if="errors" class="mr-errors" role="alert">
+                <p t-foreach="errors" t-as="error" t-out="error"/>
+            </div>
+
+            <!-- multipart: the facility card can send a photo. novalidate: report.js shows the problems. -->
+            <form id="mr-form" action="/matsafe/report" method="post" enctype="multipart/form-data"
+                  novalidate="novalidate">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                <!-- Step 1: the cards. Each card is a radio button, so it also works with a keyboard. -->
+                <fieldset class="mr-cards">
+                    <legend class="mr-step">What do you want to report?</legend>
+                    <label t-foreach="kinds" t-as="kind" class="mr-card">
+                        <input type="radio" name="kind" t-att-value="kind['key']"
+                               t-att-checked="values.get('kind') == kind['key']"
+                               t-att-data-code="kind['needs_code'] and '1'"
+                               t-att-data-consent="kind['needs_consent'] and '1'"/>
+                        <span class="mr-card-icon"><t t-call="matsafe.report_icon"/></span>
+                        <span class="mr-card-text">
+                            <span class="mr-card-title" t-out="kind['title']"/>
+                            <span class="mr-card-arabic" lang="ar" dir="rtl" t-out="kind['arabic']"/>
+                            <span class="mr-card-examples" t-out="kind['examples']"/>
+                        </span>
+                    </label>
+                </fieldset>
+
+                <!-- Step 2: shown once a card is picked -->
+                <div class="mr-fill">
+                    <button type="button" id="mr-change" class="mr-change">Choose something else</button>
+
+                    <div class="mr-field" id="mr-code-field">
+                        <label class="mr-label" for="mr-code">
+                            Member code <span class="mr-optional mr-if-no-code">(optional)</span>
+                        </label>
+                        <input type="text" id="mr-code" name="member_code" class="mr-input" maxlength="40"
+                               autocomplete="off" autocapitalize="characters"
+                               t-att-value="values.get('member_code')"/>
+                        <p class="mr-hint mr-if-code">Your name is never shown to training partners.</p>
+                        <p class="mr-hint mr-if-no-code">Leave it empty to report without your name.</p>
+                    </div>
+
+                    <!-- One block of questions per card; report.js shows only the picked one -->
+                    <section t-foreach="kinds" t-as="kind" class="mr-kind" t-att-data-kind="kind['key']">
+                        <h2 class="mr-kind-title" t-out="kind['title']"/>
+                        <p t-if="kind.get('note')" class="mr-note" t-out="kind['note']"/>
+
+                        <t t-foreach="kind['fields']" t-as="field">
+                            <!-- Input names are "<card>__<question>", e.g. skin__symptoms -->
+                            <t t-set="input_name" t-value="'%s__%s' % (kind['key'], field['name'])"/>
+                            <t t-set="value" t-value="values.get(input_name)"/>
+                            <t t-set="widget" t-value="field['widget']"/>
+
+                            <!-- Tick several (checks), pick one (choice) or 1 to 5 (scale): big buttons -->
+                            <fieldset t-if="widget in ('checks', 'choice', 'scale')" class="mr-field"
+                                      t-att-data-widget="widget" t-att-data-required="field['required'] and '1'">
+                                <legend class="mr-label" t-out="field['label']"/>
+                                <p t-if="field['hint']" class="mr-hint" t-out="field['hint']"/>
+                                <div t-attf-class="mr-chips #{'mr-scale' if widget == 'scale' else ''}">
+                                    <label t-foreach="field['options']" t-as="option" class="mr-chip">
+                                        <input t-att-type="'checkbox' if widget == 'checks' else 'radio'"
+                                               t-att-name="input_name" t-att-value="option"
+                                               t-att-checked="(option in (value or [])) if widget == 'checks' else (value == option)"/>
+                                        <span t-out="option"/>
+                                    </label>
+                                </div>
+                            </fieldset>
+
+                            <!-- Everything else: one input with a label -->
+                            <div t-else="" class="mr-field"
+                                 t-att-data-widget="widget" t-att-data-required="field['required'] and '1'">
+                                <label class="mr-label" t-att-for="input_name" t-out="field['label']"/>
+                                <input t-if="widget == 'date'" type="date" class="mr-input"
+                                       t-att-id="input_name" t-att-name="input_name" t-att-value="value"/>
+                                <input t-elif="widget == 'line'" type="text" class="mr-input" maxlength="120"
+                                       t-att-id="input_name" t-att-name="input_name" t-att-value="value"/>
+                                <textarea t-elif="widget == 'text'" class="mr-input" rows="4" maxlength="1000"
+                                          t-att-id="input_name" t-att-name="input_name"><t t-out="value"/></textarea>
+                                <!-- Class list: report.js adds the member's own classes before "Class not listed" -->
+                                <select t-elif="widget == 'session'" class="mr-input mr-session"
+                                        t-att-id="input_name" t-att-name="input_name" t-att-data-selected="value">
+                                    <option value="">Choose a class</option>
+                                    <option value="other" t-att-selected="value == 'other'">Class not listed</option>
+                                </select>
+                                <!-- A file cannot be kept when the form is shown again: the browser forbids it -->
+                                <input t-elif="widget == 'photo'" type="file" class="mr-input mr-photo" accept="image/*"
+                                       t-att-id="input_name" t-att-name="input_name"/>
+                                <p t-if="widget == 'session'" class="mr-hint">
+                                    Enter your member code to see your classes of the last 14 days.
+                                </p>
+                                <p t-if="field['hint']" class="mr-hint" t-out="field['hint']"/>
+                            </div>
+                        </t>
+                    </section>
+
+                    <div class="mr-field">
+                        <label class="mr-label" for="mr-details">
+                            Anything else? <span class="mr-optional">(optional)</span>
+                        </label>
+                        <textarea id="mr-details" name="details" class="mr-input" rows="3"
+                                  maxlength="1000"><t t-out="values.get('details')"/></textarea>
+                        <p class="mr-hint mr-if-consent">Only head coaches can read your answers.</p>
+                    </div>
+
+                    <!-- Consent: only for the four health cards -->
+                    <div class="mr-field mr-if-consent" id="mr-consent-field">
+                        <label class="mr-consent">
+                            <input type="checkbox" id="mr-consent" name="consent" value="1"
+                                   t-att-checked="values.get('consent')"/>
+                            <span>I agree my report is used to protect my training partners anonymously</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" id="mr-submit" class="mr-submit">Send report</button>
+                </div>
+            </form>
+        </main>
+
+        <script t-attf-src="/matsafe/static/src/report.js?v=#{asset_version}"></script>
+    </body>
+</html>
+    </template>
+
+    <!-- Thank-you page, one text per card. `done` holds what the backend really did,
+         so every sentence here is only shown when it is true. -->
+    <template id="report_thanks" name="MatSafe: Report Sent">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Report sent | MatSafe</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/report.css?v=#{asset_version}"/>
+    </head>
+    <body>
+        <header class="mr-top">
+            <a class="mr-logo" href="/matsafe/report">Mat<span>Safe</span></a>
+        </header>
+
+        <main class="mr-page mr-thanks">
+            <div class="mr-thanks-icon">
+                <svg class="mr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+
+            <!-- The report waits for the member's confirmation: nothing else has happened yet.
+                 The wording also fits when no email arrives. -->
+            <t t-if="done.get('pending')">
+                <h1 class="mr-title">Almost done</h1>
+                <p class="mr-lead">Your report is saved and waits for your confirmation.</p>
+                <p class="mr-text">
+                    Check your email to confirm your report. No email? Tell a coach, so they can confirm it for you.
+                </p>
+                <p class="mr-text">Nothing changes for you or your training partners until it is confirmed.</p>
+                <p t-if="kind.get('note')" class="mr-note" t-out="kind['note']"/>
+            </t>
+
+            <!-- Cards 1 to 4 when the report is open at once (matsafe.report without a
+                 confirmation step): its chain has already run -->
+            <t t-elif="kind['save_as'] == 'report'">
+                <h1 class="mr-title">Thank you</h1>
+                <t t-set="health" t-value="kind['key'] in ('skin', 'sick')"/>
+
+                <p t-if="not health" class="mr-lead">
+                    Your coach has been told. Take it easy and follow your coach's return-to-training advice.
+                </p>
+
+                <!-- Training partners: say what the chain really did -->
+                <p t-if="done.get('contacts') and done.get('emailed')" class="mr-lead">
+                    Your recent training partners have been alerted anonymously. They do not see your name.
+                </p>
+                <p t-elif="done.get('contacts')" class="mr-lead">
+                    Your coaches now have a note to warn your recent training partners. Your name is not on it.
+                </p>
+                <p t-elif="health" class="mr-lead">We found no recent training partners to alert.</p>
+
+                <!-- Door: read from the member after the report was saved -->
+                <p t-if="done.get('door_paused')" class="mr-text">
+                    Door check-in is paused for you until a head coach clears you.
+                </p>
+                <p t-else="" class="mr-text">You can still check in at the door.</p>
+
+                <p t-if="health and done.get('door_paused')" class="mr-text">
+                    Rest up. A head coach will clear you when you are ready to train again.
+                </p>
+                <p t-elif="health" class="mr-text">Rest up, and talk to a head coach before you train again.</p>
+
+                <p t-if="kind.get('note')" class="mr-note" t-out="kind['note']"/>
+            </t>
+
+            <!-- Card 5: a task for the head coach -->
+            <t t-elif="kind['save_as'] == 'coach_inbox'">
+                <h1 class="mr-title">Thank you</h1>
+                <p class="mr-lead">Only the head coach will see this.</p>
+                <p class="mr-text">Nothing changes for your door check-in.</p>
+            </t>
+
+            <!-- Card 6: a task for the team -->
+            <t t-else="">
+                <h1 class="mr-title">Thanks!</h1>
+                <p class="mr-lead">The team has been notified.</p>
+                <p class="mr-text">Reference: <strong>#<t t-out="done.get('task_ref')"/></strong></p>
+                <p t-if="done.get('photo')" class="mr-text">Your photo was attached.</p>
+            </t>
+
+            <a class="mr-submit mr-again" href="/matsafe/report">Report something else</a>
+        </main>
+    </body>
+</html>
+    </template>
+
+    <!-- /matsafe/kiosk : full-screen door page. Standalone HTML: no website header/footer.
+         JS, CSS and the two libraries are plain static files (the libraries are local copies,
+         so the kiosk works without internet). -->
+    <template id="kiosk" name="MatSafe: Door Kiosk">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>MatSafe Kiosk</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/kiosk.css?v=#{asset_version}"/>
+    </head>
+    <body>
+        <header class="ms-logo">Mat<span>Safe</span></header>
+
+        <main class="ms-main">
+            <!-- kiosk.js puts the webcam picture here -->
+            <div id="ms-camera" class="ms-camera"></div>
+            <p id="ms-status" class="ms-status">Starting...</p>
+        </main>
+
+        <!-- Fallback: type the member code -->
+        <form id="ms-code-form" class="ms-code" autocomplete="off">
+            <label for="ms-code-input">Enter member code</label>
+            <input id="ms-code-input" type="text" name="member_code" autocapitalize="characters"/>
+            <button type="submit">Check in</button>
+        </form>
+
+        <!-- Big green / red result screen, shown by kiosk.js -->
+        <div id="ms-result" class="ms-result" role="alert" hidden="hidden">
+            <div id="ms-result-text"></div>
+        </div>
+
+        <script src="/matsafe/static/src/lib/tf.min.js"></script>
+        <script src="/matsafe/static/src/lib/teachablemachine-image.min.js"></script>
+        <script t-attf-src="/matsafe/static/src/kiosk.js?v=#{asset_version}"></script>
+    </body>
+</html>
+    </template>
+
+    <!-- /matsafe/pair-cam?session_id=ID : a coach pairs two members with the camera.
+         Same look, libraries and face model as the kiosk. -->
+    <template id="pair_cam" name="MatSafe: Pair by Camera">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>MatSafe Pairing</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/kiosk.css?v=#{asset_version}"/>
+    </head>
+    <!-- pair_cam.js reads the session id from here -->
+    <body t-att-data-session-id="pair_session.id or ''">
+        <header class="ms-logo">Mat<span>Safe</span></header>
+
+        <main class="ms-main">
+            <p class="ms-info">
+                <t t-if="pair_session">Pairing for: <t t-out="pair_session.name"/></t>
+                <t t-else="">No session selected</t>
+            </p>
+            <!-- pair_cam.js puts the webcam picture here -->
+            <div id="ms-camera" class="ms-camera"></div>
+            <p id="ms-status" class="ms-status">Starting...</p>
+            <!-- "Partner 1: ..." while waiting for partner 2 -->
+            <p id="ms-partner" class="ms-info"></p>
+        </main>
+
+        <!-- Big green / red result screen, shown by pair_cam.js -->
+        <div id="ms-result" class="ms-result" role="alert" hidden="hidden">
+            <div id="ms-result-text"></div>
+        </div>
+
+        <script src="/matsafe/static/src/lib/tf.min.js"></script>
+        <script src="/matsafe/static/src/lib/teachablemachine-image.min.js"></script>
+        <script t-attf-src="/matsafe/static/src/pair_cam.js?v=#{asset_version}"></script>
+    </body>
+</html>
+    </template>
+</odoo>

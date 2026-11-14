@@ -12,6 +12,7 @@
         'data/cron.xml',
         'data/server_actions.xml',
         'views/menus.xml',
+        'views/website_templates.xml',
     ],
     'installable': True,
     'application': True,

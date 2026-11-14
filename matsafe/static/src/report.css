@@ -1,0 +1,419 @@
+/* MatSafe "Report something" page: phone first, calm colours, big touch targets */
+
+:root {
+    --mr-bg: #f5f6f3;
+    --mr-card: #ffffff;
+    --mr-text: #1f2933;
+    --mr-muted: #5b6770;
+    --mr-line: #d8dcd6;
+    --mr-main: #0f766e;        /* calm teal: buttons and picked choices */
+    --mr-main-soft: #e6f4f1;
+    --mr-warn: #8a5a00;        /* problems and safety lines: amber, not red */
+    --mr-warn-soft: #fff6dd;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--mr-bg);
+    color: var(--mr-text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif;
+    font-size: 17px;
+    line-height: 1.45;
+}
+
+/* ---- Top bar and page ---- */
+.mr-top {
+    padding: 14px 20px;
+    background: var(--mr-card);
+    border-bottom: 1px solid var(--mr-line);
+}
+
+.mr-logo {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--mr-text);
+    text-decoration: none;
+}
+
+.mr-logo span {
+    color: var(--mr-main);
+}
+
+.mr-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+}
+
+.mr-title {
+    margin: 4px 0 6px;
+    font-size: 1.7rem;
+    line-height: 1.2;
+}
+
+.mr-lead {
+    margin: 0 0 16px;
+    font-size: 1.05rem;
+    color: var(--mr-muted);
+}
+
+.mr-text {
+    margin: 0 0 12px;
+}
+
+/* ---- Messages ---- */
+.mr-errors,
+.mr-note {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #ecd9a0;
+    background: var(--mr-warn-soft);
+    color: var(--mr-warn);
+    font-weight: 600;
+}
+
+.mr-errors p {
+    margin: 0;
+}
+
+.mr-errors p + p {
+    margin-top: 6px;
+}
+
+/* ---- Step 1: the cards ---- */
+fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.mr-step,
+.mr-kind-title {
+    margin: 0 0 10px;
+    padding: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.mr-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.mr-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 76px;
+    padding: 12px 14px;
+    background: var(--mr-card);
+    border: 2px solid var(--mr-line);
+    border-radius: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* The radio button itself is hidden; the whole card is the button */
+.mr-card input,
+.mr-chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.mr-card:hover,
+.mr-card:focus-within {
+    border-color: var(--mr-main);
+}
+
+/* Picked card (class set by report.js) */
+.mr-card.mr-card-on {
+    border-color: var(--mr-main);
+    background: var(--mr-main-soft);
+}
+
+.mr-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--mr-main-soft);
+    color: var(--mr-main);
+}
+
+.mr-card.mr-card-on .mr-card-icon {
+    background: var(--mr-main);
+    color: #ffffff;
+}
+
+.mr-icon {
+    width: 26px;
+    height: 26px;
+}
+
+.mr-card-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mr-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.mr-card-arabic {
+    font-size: 0.95rem;
+    color: var(--mr-muted);
+    text-align: left;   /* stays under the English title */
+}
+
+.mr-card-examples {
+    margin-top: 2px;
+    font-size: 0.85rem;
+    color: var(--mr-muted);
+}
+
+/* ---- Step 2: the questions ---- */
+.mr-fill {
+    margin-top: 18px;
+}
+
+.mr-change {
+    margin: 0 0 18px;
+    padding: 10px 0;
+    min-height: 44px;
+    border: 0;
+    background: none;
+    color: var(--mr-main);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.mr-field {
+    margin: 0 0 20px;
+}
+
+.mr-label {
+    display: block;
+    margin: 0 0 8px;
+    padding: 0;
+    font-weight: 700;
+}
+
+.mr-optional {
+    font-weight: 400;
+    color: var(--mr-muted);
+}
+
+.mr-hint {
+    margin: 6px 0 0;
+    font-size: 0.9rem;
+    color: var(--mr-muted);
+}
+
+legend + .mr-hint {
+    margin: -4px 0 8px;
+}
+
+.mr-input {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    padding: 12px 14px;
+    background: var(--mr-card);
+    border: 2px solid var(--mr-line);
+    border-radius: 12px;
+    color: var(--mr-text);
+    font: inherit;   /* 17px: phones do not zoom in on focus */
+}
+
+textarea.mr-input {
+    resize: vertical;
+}
+
+.mr-input:focus {
+    outline: none;
+    border-color: var(--mr-main);
+}
+
+/* Choices as big buttons */
+.mr-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mr-chip span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 8px 16px;
+    background: var(--mr-card);
+    border: 2px solid var(--mr-line);
+    border-radius: 999px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mr-chip input:checked + span {
+    background: var(--mr-main);
+    border-color: var(--mr-main);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.mr-chip input:focus-visible + span {
+    outline: 3px solid var(--mr-main-soft);
+    outline-offset: 2px;
+}
+
+/* 1 to 5: five equal buttons in one row */
+.mr-scale {
+    flex-wrap: nowrap;
+}
+
+.mr-scale .mr-chip {
+    flex: 1 1 0;
+}
+
+.mr-scale .mr-chip span {
+    padding: 8px 0;
+    border-radius: 12px;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+/* Consent */
+.mr-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    background: var(--mr-card);
+    border: 2px solid var(--mr-line);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.mr-consent input {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    accent-color: var(--mr-main);
+}
+
+/* A problem found by report.js, under its question */
+.mr-problem {
+    margin: 8px 0 0;
+    color: var(--mr-warn);
+    font-weight: 700;
+}
+
+.mr-field-bad .mr-input,
+.mr-field-bad .mr-consent {
+    border-color: #d9a400;
+}
+
+.mr-submit {
+    display: block;
+    width: 100%;
+    min-height: 56px;
+    padding: 14px 20px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--mr-main);
+    color: #ffffff;
+    font: inherit;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.mr-submit:disabled {
+    opacity: 0.6;
+}
+
+/* ---- What report.js switches (class mr-js is set on <html> by report.js;
+        without JavaScript every question simply stays visible) ---- */
+.mr-js form[data-step="pick"] .mr-fill,
+.mr-js form[data-step="fill"] .mr-step,
+.mr-js .mr-kind-title,   /* the picked card already shows the title */
+.mr-js form[data-step="fill"] .mr-card:not(.mr-card-on),
+.mr-js .mr-kind[hidden],
+.mr-js form[data-code="1"] .mr-if-no-code,
+.mr-js form[data-code="0"] .mr-if-code,
+.mr-js form[data-consent="0"] .mr-if-consent {
+    display: none;
+}
+
+/* ---- Thank-you page ---- */
+.mr-thanks {
+    padding-top: 36px;
+    text-align: center;
+}
+
+.mr-thanks-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--mr-main-soft);
+    color: var(--mr-main);
+}
+
+.mr-thanks-icon .mr-icon {
+    width: 36px;
+    height: 36px;
+}
+
+.mr-thanks .mr-lead {
+    color: var(--mr-text);
+}
+
+.mr-thanks .mr-note {
+    text-align: left;
+}
+
+.mr-again {
+    margin-top: 28px;
+}
+
+/* ---- Wider screens: cards in two columns ---- */
+@media (min-width: 560px) {
+    .mr-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .mr-cards .mr-step {
+        grid-column: 1 / -1;
+    }
+
+    .mr-js form[data-step="fill"] .mr-cards {
+        grid-template-columns: 1fr;
+    }
+}
