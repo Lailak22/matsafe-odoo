@@ -5,3 +5,4 @@ from . import matsafe_report
 from . import matsafe_cluster
 from . import matsafe_checkin
 from . import matsafe_gear
+from . import matsafe_rating

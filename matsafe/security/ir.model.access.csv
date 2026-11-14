@@ -13,3 +13,6 @@ access_matsafe_checkin_head,matsafe.checkin head coach,model_matsafe_checkin,gro
 access_matsafe_gear_head,matsafe.gear head coach,model_matsafe_gear,group_head_coach,1,1,1,1
 access_matsafe_report_head,matsafe.report head coach,model_matsafe_report,group_head_coach,1,1,1,1
 access_matsafe_cluster_head,matsafe.cluster head coach,model_matsafe_cluster,group_head_coach,1,1,1,1
+access_matsafe_rating_user,matsafe.rating user,model_matsafe_rating,base.group_user,1,0,0,0
+access_matsafe_rating_coach,matsafe.rating coach,model_matsafe_rating,group_coach,1,0,1,0
+access_matsafe_rating_head,matsafe.rating head coach,model_matsafe_rating,group_head_coach,1,1,1,1

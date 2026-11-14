@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from odoo import api, fields, models
 
@@ -42,6 +42,13 @@ class ResPartner(models.Model):
         ('light_sparring', 'Light Sparring'),
         ('full', 'Full'),
     ], string="Return-to-Play Stage", help="Shown on the kiosk. Empty = no restriction.")
+    # Partner ratings received (matsafe.rating): how controlled this member is when sparring
+    rating_received_ids = fields.One2many('matsafe.rating', 'rated_id', string="Ratings Received")
+    control_score = fields.Float(string="Control Score", compute='_compute_control', store=True,
+                                 help="Average score of the last 10 ratings received (1-5).")
+    rating_count = fields.Integer(string="Partner Ratings", compute='_compute_control', store=True)
+    rough_flag = fields.Boolean(string="Rough Flag", compute='_compute_control', store=True,
+                                help="At least 3 ratings and a control score under 2.5.")
     open_report_id = fields.Many2one('matsafe.report', string="Open Report", copy=False)
 
     _member_code_unique = models.Constraint(
@@ -56,6 +63,34 @@ class ResPartner(models.Model):
             dates = allowed.mapped('datetime')
             partner.last_checkin = max(dates) if dates else False
             partner.usual_sessions_week = len([d for d in dates if d >= since]) / 4.0
+
+    @api.depends('rating_received_ids.score', 'rating_received_ids.date')
+    def _compute_control(self):
+        for partner in self:
+            ratings = partner.rating_received_ids
+            # Newest 10 ratings (by session date, then creation order)
+            last10 = ratings.sorted(lambda r: (r.date or datetime.min, r.id), reverse=True)[:10]
+            partner.rating_count = len(ratings)
+            partner.control_score = sum(last10.mapped('score')) / len(last10) if last10 else 0.0
+            partner.rough_flag = partner.rating_count >= 3 and partner.control_score < 2.5
+
+    def _notify_newly_rough(self, before):
+        """Note + head coach activity for members whose rough_flag just turned on.
+        `before` = {partner_id: rough_flag before the change}."""
+        # sudo: ratings may come from coaches or the website, the alert is system behaviour
+        head_coaches = self.env.ref('matsafe.group_head_coach').sudo().user_ids.filtered(
+            lambda u: not u.share and u.id != 1)  # skip public/portal users and __system__
+        for partner in self.sudo():
+            if not partner.rough_flag or before.get(partner.id):
+                continue
+            note = ("MatSafe: flagged as rough (control score %.1f over the last %d ratings). "
+                    "They won't be paired with beginners." % (partner.control_score, min(partner.rating_count, 10)))
+            partner.message_post(body=note, subtype_xmlid='mail.mt_note')
+            for user in head_coaches:
+                partner.activity_schedule(
+                    'mail.mail_activity_data_todo',
+                    summary="Rough sparring flag: talk to %s" % partner.name,
+                    note=note, user_id=user.id)
 
     def _matsafe_notify(self, template_xmlid, note, record=None):
         """Email with the template if it exists, otherwise leave a note on the member's chatter.
