@@ -69,13 +69,15 @@ class MatsafeSession(models.Model):
             for member in pool:
                 if member in paired:
                     continue
-                others = [m for m in pool if m != member]
-                if not any(abs(m.weight_kg - member.weight_kg) <= self.MAX_WEIGHT_GAP for m in others):
-                    reason = "no partner within %s kg" % self.MAX_WEIGHT_GAP
-                elif not any(session._can_pair(member, m) for m in others):
+                problems = {session._pair_problem(member, m) for m in pool if m != member}
+                if None in problems:
+                    reason = "odd one out (all valid partners are in pairs)"
+                elif 'flag' in problems:
+                    reason = "flagged partner: no safe match"
+                elif 'level' in problems:
                     reason = "no partner at a compatible level within %s kg" % self.MAX_WEIGHT_GAP
                 else:
-                    reason = "odd one out (all valid partners are in pairs)"
+                    reason = "no partner within %s kg" % self.MAX_WEIGHT_GAP
                 sat_out.append("%s: %s" % (member.name, reason))
 
             # One note listing everyone who sits out and why
@@ -154,10 +156,20 @@ class MatsafeSession(models.Model):
         pairs = [tuple(sorted((members[i], members[j]), key=lambda m: m.weight_kg)) for i, j in best['pairs']]
         return pairs, steps[0] <= self.PAIR_SEARCH_LIMIT
 
+    def _pair_problem(self, a, b):
+        """Why a and b can't spar together ('weight', 'level' or 'flag'), or None if they can."""
+        if abs(a.weight_kg - b.weight_kg) > self.MAX_WEIGHT_GAP:
+            return 'weight'
+        if {a.level, b.level} == {'beginner', 'advanced'}:
+            return 'level'
+        # A rough-flagged member never spars with a beginner
+        if (a.rough_flag and b.level == 'beginner') or (b.rough_flag and a.level == 'beginner'):
+            return 'flag'
+        return None
+
     def _can_pair(self, a, b):
-        """Within 10 kg and not beginner with advanced."""
-        return (abs(a.weight_kg - b.weight_kg) <= self.MAX_WEIGHT_GAP
-                and {a.level, b.level} != {'beginner', 'advanced'})
+        """Within 10 kg, not beginner with advanced, no rough-flagged member with a beginner."""
+        return self._pair_problem(a, b) is None
 
     def _last_partner(self, member):
         """Partner of the member in their most recent other session (empty if none)."""
