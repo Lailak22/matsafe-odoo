@@ -127,4 +127,42 @@
     </body>
 </html>
     </template>
+
+    <!-- /matsafe/pair-cam?session_id=ID : a coach pairs two members with the camera.
+         Same look, libraries and face model as the kiosk. -->
+    <template id="pair_cam" name="MatSafe: Pair by Camera">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>MatSafe Pairing</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/kiosk.css?v=#{asset_version}"/>
+    </head>
+    <!-- pair_cam.js reads the session id from here -->
+    <body t-att-data-session-id="pair_session.id or ''">
+        <header class="ms-logo">Mat<span>Safe</span></header>
+
+        <main class="ms-main">
+            <p class="ms-info">
+                <t t-if="pair_session">Pairing for: <t t-out="pair_session.name"/></t>
+                <t t-else="">No session selected</t>
+            </p>
+            <!-- pair_cam.js puts the webcam picture here -->
+            <div id="ms-camera" class="ms-camera"></div>
+            <p id="ms-status" class="ms-status">Starting...</p>
+            <!-- "Partner 1: ..." while waiting for partner 2 -->
+            <p id="ms-partner" class="ms-info"></p>
+        </main>
+
+        <!-- Big green / red result screen, shown by pair_cam.js -->
+        <div id="ms-result" class="ms-result" role="alert" hidden="hidden">
+            <div id="ms-result-text"></div>
+        </div>
+
+        <script src="/matsafe/static/src/lib/tf.min.js"></script>
+        <script src="/matsafe/static/src/lib/teachablemachine-image.min.js"></script>
+        <script t-attf-src="/matsafe/static/src/pair_cam.js?v=#{asset_version}"></script>
+    </body>
+</html>
+    </template>
 </odoo>

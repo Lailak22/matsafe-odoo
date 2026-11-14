@@ -81,12 +81,13 @@ class MatsafeWebsite(http.Controller):
     # ------------------------------------------------------------------
     @http.route('/matsafe/kiosk', type='http', auth='public', methods=['GET'])
     def kiosk(self, **kw):
-        return request.render('matsafe.kiosk', {'asset_version': self._kiosk_asset_version()})
+        return request.render('matsafe.kiosk', {'asset_version': self._asset_version()})
 
-    def _kiosk_asset_version(self):
-        """Last change time of kiosk.js / kiosk.css, added to their URLs as ?v=...
+    def _asset_version(self):
+        """Last change time of our own JS / CSS files, added to their URLs as ?v=...
         Browsers keep Odoo static files for a week; this makes them reload after an edit."""
-        paths = [file_path('matsafe/static/src/' + name) for name in ('kiosk.js', 'kiosk.css')]
+        names = ('kiosk.js', 'kiosk.css', 'pair_cam.js')
+        paths = [file_path('matsafe/static/src/' + name) for name in names]
         return int(max(os.path.getmtime(path) for path in paths))
 
     # ------------------------------------------------------------------
@@ -120,3 +121,50 @@ class MatsafeWebsite(http.Controller):
             'reason': reason,
         })
         return {'result': result, 'member_name': member.name or '', 'reason': reason or ''}
+
+    # ------------------------------------------------------------------
+    # /matsafe/pair-cam?session_id=ID : pair two members with the camera
+    # ------------------------------------------------------------------
+    def _find_session(self, session_id):
+        """matsafe.session with this id (from the URL or the JSON body), else an empty recordset."""
+        Session = request.env['matsafe.session']
+        try:
+            return Session.browse(int(session_id)).exists()
+        except (TypeError, ValueError):
+            return Session
+
+    # auth='user': opened by a coach from the session form, so a login is required
+    @http.route('/matsafe/pair-cam', type='http', auth='user', methods=['GET'])
+    def pair_cam(self, session_id=None, **kw):
+        return request.render('matsafe.pair_cam', {
+            'pair_session': self._find_session(session_id),
+            'asset_version': self._asset_version(),
+        })
+
+    # ------------------------------------------------------------------
+    # /matsafe/pair : save one camera pairing, called by the pairing page (JSON-RPC)
+    # ------------------------------------------------------------------
+    @http.route('/matsafe/pair', type='jsonrpc', auth='user', methods=['POST'])
+    def pair(self, face_label_a=None, face_label_b=None, session_id=None, **kw):
+        session = self._find_session(session_id)
+        member_a = self._find_member('face_label', face_label_a)
+        member_b = self._find_member('face_label', face_label_b)
+
+        if not session:
+            reason = "Session not found"
+        elif not member_a or not member_b:
+            reason = "Unknown member: %s" % (face_label_b if member_a else face_label_a)
+        elif member_a == member_b:
+            reason = "Two different partners are needed"
+        else:
+            # No sudo: the logged-in user needs the coach right to create pairings
+            request.env['matsafe.pairing'].create({
+                'session_id': session.id,
+                'member_a_id': member_a.id,
+                'member_b_id': member_b.id,
+                'source': 'camera',
+            })
+            return {'result': 'saved', 'member_a_name': member_a.name,
+                    'member_b_name': member_b.name, 'reason': ''}
+        return {'result': 'error', 'member_a_name': member_a.name or '',
+                'member_b_name': member_b.name or '', 'reason': reason}

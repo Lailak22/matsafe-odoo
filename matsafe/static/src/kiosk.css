@@ -68,6 +68,15 @@ body {
     line-height: 1.2;
 }
 
+/* Small grey line (pairing page: session name, "Partner 1: ...") */
+.ms-info {
+    margin: 0;
+    min-height: 1.4em;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-weight: 600;
+    color: #9ca3af;
+}
+
 /* Bottom: small member code fallback */
 .ms-code {
     display: flex;
