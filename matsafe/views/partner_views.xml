@@ -6,6 +6,11 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
+            <!-- Red corner ribbon, visible on every tab, when partners rated this member as too rough -->
+            <xpath expr="//sheet" position="inside">
+                <field name="rough_flag" invisible="1"/>
+                <widget name="web_ribbon" title="Rough sparring" bg_color="text-bg-danger" invisible="not rough_flag"/>
+            </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="MatSafe" name="matsafe">
                     <group>
@@ -34,6 +39,35 @@
                             <field name="usual_sessions_week"/>
                         </group>
                     </group>
+                    <!-- Partner ratings received on /matsafe/rate (1 = too rough, 5 = very controlled) -->
+                    <group string="Partner ratings" invisible="not is_member">
+                        <group>
+                            <div class="badge text-bg-danger fs-6 px-3 py-2" colspan="2" invisible="not rough_flag">
+                                ROUGH SPARRING
+                            </div>
+                            <field name="control_score" digits="[2, 1]" invisible="not rating_count"
+                                   decoration-danger="rough_flag" decoration-bf="rough_flag"/>
+                            <field name="rating_count"/>
+                        </group>
+                        <group>
+                            <div class="text-muted" colspan="2">
+                                Average of the last 10 ratings. Flagged as rough at 3+ ratings and a score under 2.5:
+                                Make Pairs then keeps this member away from beginners.
+                            </div>
+                        </group>
+                    </group>
+                    <field name="rating_received_ids" invisible="not is_member or not rating_count" readonly="1">
+                        <list decoration-danger="score &lt;= 2" create="false" delete="false">
+                            <field name="date" string="Class date"/>
+                            <field name="session_id"/>
+                            <field name="score" widget="badge"
+                                   decoration-danger="score &lt;= 2"
+                                   decoration-warning="score == 3"
+                                   decoration-success="score &gt;= 4"/>
+                            <field name="comment"/>
+                            <field name="rater_id" groups="matsafe.group_head_coach" optional="show"/>
+                        </list>
+                    </field>
                 </page>
             </xpath>
         </field>
@@ -60,6 +94,12 @@
                        decoration-warning="member_state == 'frozen'"/>
                 <field name="rtp_stage" string="Return to play" optional="show" widget="badge" decoration-danger="rtp_stage == 'no_sparring'" decoration-warning="rtp_stage == 'drilling'" decoration-info="rtp_stage == 'light_sparring'" decoration-success="rtp_stage == 'full'"/>
                 <field name="open_report_id" optional="show"/>
+                <field name="rating_count" column_invisible="1"/>
+                <!-- No score shown before the first rating (0.0 would look like a bad score) -->
+                <field name="control_score" string="Control" digits="[2, 1]" optional="show"
+                       invisible="not rating_count"
+                       decoration-danger="rough_flag" decoration-bf="rough_flag"/>
+                <field name="rough_flag" string="Rough" optional="show"/>
             </list>
         </field>
     </record>
@@ -74,9 +114,12 @@
                 <field name="member_code"/>
                 <separator/>
                 <filter string="Members" name="filter_members" domain="[('is_member', '=', True)]"/>
+                <!-- Own group: "Members" AND (Blocked OR Frozen OR Return to play OR Rough sparring) -->
+                <separator/>
                 <filter string="Blocked" name="filter_blocked" domain="[('member_state', '=', 'blocked')]"/>
                 <filter string="Frozen" name="filter_frozen" domain="[('member_state', '=', 'frozen')]"/>
                 <filter string="Return to play" name="filter_rtp" domain="[('rtp_stage', '!=', False)]"/>
+                <filter string="Rough sparring" name="filter_rough" domain="[('rough_flag', '=', True)]"/>
                 <filter string="Member State" name="group_member_state" context="{'group_by': 'member_state'}"/>
             </xpath>
         </field>

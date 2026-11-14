@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Partner ratings (matsafe.rating): members rate how controlled their training partners were,
+     on /matsafe/rate. Who gave a rating (rater_id) is shown to head coaches only. -->
+<odoo>
+    <record id="view_matsafe_rating_list" model="ir.ui.view">
+        <field name="name">matsafe.rating.list</field>
+        <field name="model">matsafe.rating</field>
+        <field name="arch" type="xml">
+            <!-- Ratings come from members on /matsafe/rate, not from the backend -->
+            <list string="Ratings" default_order="date desc, id desc" create="false"
+                  decoration-danger="score &lt;= 2">
+                <field name="date" string="Class date"/>
+                <field name="session_id"/>
+                <field name="rated_id"/>
+                <field name="score" widget="badge"
+                       decoration-danger="score &lt;= 2"
+                       decoration-warning="score == 3"
+                       decoration-success="score &gt;= 4"/>
+                <field name="comment"/>
+                <field name="rater_id" groups="matsafe.group_head_coach" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_matsafe_rating_form" model="ir.ui.view">
+        <field name="name">matsafe.rating.form</field>
+        <field name="model">matsafe.rating</field>
+        <field name="arch" type="xml">
+            <form string="Rating" create="false">
+                <sheet>
+                    <div class="alert alert-danger" role="alert" invisible="score &gt; 2">
+                        Low score: this partner was rated as too rough.
+                    </div>
+                    <group>
+                        <group string="Rating">
+                            <field name="rated_id"/>
+                            <field name="score" widget="badge"
+                                   decoration-danger="score &lt;= 2"
+                                   decoration-warning="score == 3"
+                                   decoration-success="score &gt;= 4"/>
+                            <field name="comment"/>
+                        </group>
+                        <group string="Class">
+                            <field name="session_id"/>
+                            <field name="date" string="Class date"/>
+                            <field name="rater_id" groups="matsafe.group_head_coach"/>
+                        </group>
+                    </group>
+                    <p class="text-muted">1 = too rough, 5 = very controlled. Members never see who rated them.</p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_matsafe_rating_search" model="ir.ui.view">
+        <field name="name">matsafe.rating.search</field>
+        <field name="model">matsafe.rating</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="rated_id"/>
+                <field name="session_id"/>
+                <field name="rater_id" groups="matsafe.group_head_coach"/>
+                <filter string="Low (1-2)" name="low" domain="[('score', '&lt;=', 2)]"/>
+                <filter string="Good (4-5)" name="good" domain="[('score', '&gt;=', 4)]"/>
+                <separator/>
+                <filter string="Rated Member" name="group_rated" context="{'group_by': 'rated_id'}"/>
+                <filter string="Class" name="group_session" context="{'group_by': 'session_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_matsafe_rating" model="ir.actions.act_window">
+        <field name="name">Ratings</field>
+        <field name="res_model">matsafe.rating</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No partner ratings yet. Members rate their partners at /matsafe/rate</p>
+        </field>
+    </record>
+</odoo>

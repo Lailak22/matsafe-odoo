@@ -314,6 +314,71 @@
         <field name="source">auto</field>
     </record>
 
+    <!-- ================= PARTNER RATINGS (1 = too rough, 5 = very controlled) =================
+         Every rating matches one of the pairings above. Story for the demo:
+         - Majid Al Shamsi (M006, advanced) got 3 low ratings -> rough_flag ON
+           (his head coach gets a to-do, and Make Pairs keeps him away from beginners)
+         - Shahd Elwardany (M003) and Rashid Al Mazrouei (M009) are rated as very controlled -->
+    <record id="rating_majid_by_nasser" model="matsafe.rating">
+        <field name="session_id" ref="session_1"/>
+        <field name="rater_id" ref="member_nasser"/>
+        <field name="rated_id" ref="member_majid"/>
+        <field name="score" eval="2"/>
+        <field name="comment">Went really hard on a beginner, no time to tap</field>
+    </record>
+    <record id="rating_majid_by_hoor" model="matsafe.rating">
+        <field name="session_id" ref="session_3"/>
+        <field name="rater_id" ref="member_saif"/>
+        <field name="rated_id" ref="member_majid"/>
+        <field name="score" eval="1"/>
+        <field name="comment">Slammed me in a takedown</field>
+    </record>
+    <record id="rating_majid_by_hamdan" model="matsafe.rating">
+        <field name="session_id" ref="session_5"/>
+        <field name="rater_id" ref="member_hamdan"/>
+        <field name="rated_id" ref="member_majid"/>
+        <field name="score" eval="2"/>
+        <field name="comment">Too much power in light sparring</field>
+    </record>
+    <record id="rating_shahd_by_laila" model="matsafe.rating">
+        <field name="session_id" ref="session_1"/>
+        <field name="rater_id" ref="member_omar"/>
+        <field name="rated_id" ref="member_ahmed"/>
+        <field name="score" eval="5"/>
+        <field name="comment">Very controlled, great partner</field>
+    </record>
+    <record id="rating_shahd_by_saeed" model="matsafe.rating">
+        <field name="session_id" ref="session_3"/>
+        <field name="rater_id" ref="member_saeed"/>
+        <field name="rated_id" ref="member_ahmed"/>
+        <field name="score" eval="5"/>
+    </record>
+    <record id="rating_shahd_by_ali" model="matsafe.rating">
+        <field name="session_id" ref="session_4"/>
+        <field name="rater_id" ref="member_ali"/>
+        <field name="rated_id" ref="member_ahmed"/>
+        <field name="score" eval="4"/>
+    </record>
+    <record id="rating_rashid_by_hamdan" model="matsafe.rating">
+        <field name="session_id" ref="session_2"/>
+        <field name="rater_id" ref="member_hamdan"/>
+        <field name="rated_id" ref="member_rashid"/>
+        <field name="score" eval="5"/>
+        <field name="comment">Safe and technical</field>
+    </record>
+    <record id="rating_rashid_by_yousef" model="matsafe.rating">
+        <field name="session_id" ref="session_4"/>
+        <field name="rater_id" ref="member_yousef"/>
+        <field name="rated_id" ref="member_rashid"/>
+        <field name="score" eval="4"/>
+    </record>
+    <record id="rating_laila_by_rashid" model="matsafe.rating">
+        <field name="session_id" ref="session_5"/>
+        <field name="rater_id" ref="member_rashid"/>
+        <field name="rated_id" ref="member_omar"/>
+        <field name="score" eval="4"/>
+    </record>
+
     <!-- ================= CHECK-INS (one per attendee per session) ================= -->
     <record id="checkin_session_1_omar" model="matsafe.checkin">
         <field name="member_id" ref="member_omar"/>

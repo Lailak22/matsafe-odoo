@@ -18,6 +18,8 @@
               action="action_matsafe_session" sequence="20"/>
     <menuitem id="menu_matsafe_members" name="Members" parent="menu_matsafe_root"
               action="action_matsafe_members" sequence="30"/>
+    <menuitem id="menu_matsafe_ratings" name="Ratings" parent="menu_matsafe_root"
+              action="action_matsafe_rating" sequence="35"/>
     <menuitem id="menu_matsafe_reports" name="Reports" parent="menu_matsafe_root"
               action="action_matsafe_report" sequence="40"/>
     <menuitem id="menu_matsafe_outbreaks" name="Outbreaks" parent="menu_matsafe_root"

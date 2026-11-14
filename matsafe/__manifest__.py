@@ -20,6 +20,7 @@
         'views/report_views.xml',
         'views/cluster_views.xml',
         'views/checkin_views.xml',
+        'views/rating_views.xml',
         'views/gear_views.xml',
         'views/dashboard_views.xml',
         'views/website_templates.xml',
