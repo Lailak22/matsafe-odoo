@@ -760,6 +760,163 @@ select.mr-input {
     font-size: 0.85rem;
 }
 
+/* ---- Rating page (/matsafe/rate) ---- */
+
+/* "Which class?": one full-width option per class, picked like a report card */
+.mr-options {
+    display: grid;
+    gap: 10px;
+}
+
+.mr-option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 60px;
+    padding: 12px 16px;
+    background: var(--mr-paper);
+    border: 2px solid var(--mr-ink);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+
+.mr-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (hover: hover) {
+    .mr-option:hover {
+        background: var(--mr-hover);
+    }
+}
+
+.mr-option:focus-within {
+    outline: 3px solid var(--mr-ink);
+    outline-offset: 2px;
+}
+
+.mr-option:has(input:checked) {
+    background: var(--mr-paper);
+    border-color: var(--mr-red);
+    box-shadow: inset 6px 0 0 var(--mr-red);
+}
+
+.mr-option-title {
+    font-family: var(--mr-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+}
+
+.mr-option-meta {
+    font-size: 0.88rem;
+    color: var(--mr-muted);
+}
+
+/* One card per training partner */
+.mr-partner {
+    margin: 0 0 16px;
+    padding: 16px 16px 4px;
+    background: var(--mr-paper);
+    border: 2px solid var(--mr-ink);
+    border-radius: 6px;
+}
+
+.mr-partner-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 14px;
+}
+
+.mr-partner-name {
+    margin: 0;
+    font-family: var(--mr-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+}
+
+/* An already rated partner: just the name and this tag */
+.mr-partner:has(.mr-tag) {
+    padding-bottom: 16px;
+}
+
+.mr-partner:has(.mr-tag) .mr-partner-head {
+    margin: 0;
+}
+
+.mr-tag {
+    padding: 4px 10px;
+    border-radius: 3px;
+    background: var(--mr-ink);
+    color: #ffffff;
+    font-family: var(--mr-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.mr-field-last {
+    margin-bottom: 12px;
+}
+
+/* Control score 1 to 5: here LOW is the warning (1-2 red), 4-5 stay black */
+.mr-scale-rate .mr-chip:nth-child(n+4) input:checked + span {
+    background: var(--mr-ink);
+    border-color: var(--mr-ink);
+}
+
+.mr-scale-rate .mr-chip:nth-child(-n+2) input:checked + span {
+    background: var(--mr-red);
+    border-color: var(--mr-red);
+}
+
+/* No classes / no partners: a calm box, not an empty page */
+.mr-empty {
+    margin: 8px 0 20px;
+    padding: 18px;
+    background: var(--mr-paper);
+    border: 2px solid var(--mr-ink);
+    border-left: 8px solid var(--mr-ink);
+    border-radius: 4px;
+}
+
+.mr-empty p {
+    margin: 0;
+}
+
+.mr-empty-title {
+    margin: 0 0 6px;
+    font-family: var(--mr-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Small text link under a button ("Rate your training partners") */
+.mr-more {
+    margin: 18px 0 0;
+    text-align: center;
+}
+
+.mr-more a {
+    color: var(--mr-ink);
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-color: var(--mr-red);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 4px;
+}
+
 /* ---- Very narrow phones: one card per row ---- */
 @media (max-width: 339px) {
     .mr-cards {

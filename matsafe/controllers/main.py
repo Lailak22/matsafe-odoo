@@ -40,6 +40,12 @@ SAVE_ERROR = "Sorry, your report could not be saved. Please tell a coach in pers
 ALREADY_ERROR = ("Your report could not be saved. If you already sent a report, a coach has it. "
                  "Otherwise please tell a coach in person.")
 
+# ---- Partner rating page (/matsafe/rate) ----------------------------------
+RATE_DONE_KEY = 'matsafe_rate_done'          # what the rating thank-you page shows, kept in the session
+RATE_STEPS = ["You", "Class", "Rate"]        # the 3-step bar of the rating page
+RATE_SCORES = ('1', '2', '3', '4', '5')
+RATE_SAVE_ERROR = "Sorry, your ratings could not be saved. Please tell a coach in person."
+
 
 class MatsafeWebsite(http.Controller):
 
@@ -235,6 +241,130 @@ class MatsafeWebsite(http.Controller):
         member = self._find_member('member_code', member_code)
         return [{'id': session.id, 'label': self._session_label(session)}
                 for session in self._attended_sessions(member)]
+
+    # ------------------------------------------------------------------
+    # /matsafe/rate : rate your training partners (matsafe.rating)
+    # Step 1 member code -> step 2 one of their classes -> step 3 a score per partner.
+    # Every POST carries the member code again and is checked from scratch.
+    # ------------------------------------------------------------------
+    @http.route('/matsafe/rate', type='http', auth='public', website=True,
+                methods=['GET', 'POST'], sitemap=False)
+    def rate(self, **post):
+        if request.httprequest.method == 'GET':
+            # After saving we redirect here with ?done=1; the facts travel in the session
+            if post.get('done'):
+                done = request.session.get(RATE_DONE_KEY)
+                if not done:
+                    return request.redirect('/matsafe/rate')
+                return request.render('matsafe.rate_thanks', {
+                    'done': done, 'rate_steps': RATE_STEPS, 'asset_version': self._asset_version()})
+            return self._render_rate('code', {})
+
+        form = request.httprequest.form
+        values = {'member_code': (form.get('member_code') or '').strip()[:MAX_LINE]}
+        # 1. Who is rating: the same identity check and message as the report form
+        if not values['member_code']:
+            return self._render_rate('code', values, ["Please enter your member code."])
+        member = self._find_member('member_code', values['member_code'])
+        if not member:
+            return self._render_rate('code', values, [IDENTITY_ERROR])
+
+        # 2. Which class: only one of the member's own classes of the last 14 days
+        sessions = self._rate_sessions(member)
+        if form.get('step') == 'code':
+            return self._render_rate('class', values, member=member, sessions=sessions)
+        session = sessions.filtered(lambda s: str(s.id) == form.get('session_id'))
+        if not session:
+            return self._render_rate('class', values, ["Please choose a class."],
+                                     member=member, sessions=sessions)
+        values['session_id'] = session.id
+        partners = self._rate_partners(member, session)
+        if form.get('step') != 'save':
+            return self._render_rate('rate', values, member=member, session=session, partners=partners)
+
+        # 3. Save: the browser is never trusted, every score is checked again here
+        ratings, errors = self._read_ratings(form, member, session, partners, values)
+        if errors:
+            return self._render_rate('rate', values, errors, member=member, session=session, partners=partners)
+        try:
+            with request.env.cr.savepoint():
+                # sudo: website visitors have no rights on matsafe.rating; the model keeps its own rules
+                request.env['matsafe.rating'].sudo().create(ratings)
+        except Exception:
+            # e.g. rated a second time from another tab: the model's unique rule refused it
+            _logger.exception("MatSafe: could not save ratings of member %s", member.id)
+            partners = self._rate_partners(member, session)  # read again: some may now be rated
+            return self._render_rate('rate', values, [RATE_SAVE_ERROR],
+                                     member=member, session=session, partners=partners)
+
+        # Redirect so a refresh does not send the ratings twice. No names in the session.
+        request.session[RATE_DONE_KEY] = {'count': len(ratings), 'session': self._session_label(session)}
+        return request.redirect('/matsafe/rate?done=1')
+
+    def _rate_sessions(self, member):
+        """The member's classes of the last 14 days that really took place (newest first)."""
+        return self._attended_sessions(member).filtered(lambda s: s.state in ('running', 'done'))
+
+    def _rate_partners(self, member, session):
+        """[{'partner': res.partner, 'rated': bool}] for the partners the member was paired with
+        in this class (from matsafe.pairing), by name."""
+        pairings = session.pairing_ids.filtered(lambda p: member in (p.member_a_id | p.member_b_id))
+        partners = (pairings.member_a_id | pairings.member_b_id) - member
+        rated = request.env['matsafe.rating'].sudo().search([
+            ('rater_id', '=', member.id), ('session_id', '=', session.id), ('rated_id', 'in', partners.ids),
+        ]).rated_id
+        return [{'partner': partner, 'rated': partner in rated} for partner in partners.sorted('name')]
+
+    def _read_ratings(self, form, member, session, partners, values):
+        """Check the posted scores. Returns (create values for matsafe.rating, errors).
+        What the visitor picked is copied into `values` so the page can show it again."""
+        open_ids = {info['partner'].id: info['partner'] for info in partners if not info['rated']}
+        rated_ids = {info['partner'].id: info['partner'] for info in partners if info['rated']}
+        ratings, errors = [], []
+        values['scores'], values['comments'] = {}, {}
+        for key in form:
+            if not key.startswith('score_'):
+                continue
+            try:
+                partner_id = int(key[len('score_'):])
+            except ValueError:
+                partner_id = 0
+            if partner_id in rated_ids:
+                errors.append("You already rated %s for this class." % rated_ids[partner_id].name)
+            elif partner_id not in open_ids:
+                # Yourself, someone from another class, or a made-up id
+                errors.append("You can only rate partners you trained with in this class.")
+        for partner_id, partner in open_ids.items():
+            score = form.get('score_%d' % partner_id) or ''
+            comment = (form.get('comment_%d' % partner_id) or '').strip()[:MAX_LINE]
+            values['scores'][partner_id], values['comments'][partner_id] = score, comment
+            if not score:
+                if comment:
+                    errors.append("Please choose a score for %s too." % partner.name)
+                continue  # partners without a score are simply skipped
+            if score not in RATE_SCORES:
+                errors.append("Please choose a score from 1 to 5 for %s." % partner.name)
+                continue
+            ratings.append({'session_id': session.id, 'rater_id': member.id, 'rated_id': partner_id,
+                            'score': int(score), 'comment': comment or False})
+        if not ratings and not errors:
+            errors.append("Please rate at least one partner.")
+        return ratings, list(dict.fromkeys(errors))  # each message once
+
+    def _render_rate(self, step, values, errors=None, member=None, sessions=None, session=None, partners=None):
+        sessions = sessions if sessions is not None else request.env['matsafe.session']
+        return request.render('matsafe.rate_page', {
+            'step': step,                    # code / class / rate
+            'values': values,
+            'errors': errors or [],
+            'sessions': [{'id': s.id, 'label': self._session_label(s),
+                          'partners': len(self._rate_partners(member, s))} for s in sessions] if member else [],
+            'session_label': session and self._session_label(session),
+            'partners': partners or [],
+            'open_count': len([info for info in partners or [] if not info['rated']]),  # still to rate
+            'rate_steps': RATE_STEPS,
+            'asset_version': self._asset_version(),
+        })
 
     # ---- Saving: cards 1 to 4 -> matsafe.report ------------------------------
     def _save_report(self, kind, member, answers, details):

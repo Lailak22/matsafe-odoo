@@ -38,8 +38,10 @@
     </template>
 
     <!-- Top of every report page: shield + wordmark + tagline, then the 3-step progress bar.
-         progress_at: choose / details / send / done (report.js moves it on the form); empty: no bar. -->
+         progress_at: choose / details / send / done (report.js moves it on the form); empty: no bar.
+         progress_labels: the 3 step names (default Choose / Details / Send). -->
     <template id="report_top" name="MatSafe: Report Page Top">
+        <t t-set="step_labels" t-value="progress_labels or ['Choose', 'Details', 'Send']"/>
         <!-- Mat tape: the one red and black stripe of the page -->
         <div class="mr-tape" aria-hidden="true"/>
         <header class="mr-top">
@@ -48,9 +50,9 @@
         </header>
         <!-- Scoreboard steps: the red bar sits under the current one -->
         <ol t-if="progress_at" id="mr-progress" class="mr-progress" t-att-data-at="progress_at" aria-label="Progress">
-            <li data-step="choose"><span class="mr-progress-label"><b>01</b> Choose</span><span class="mr-progress-bar"/></li>
-            <li data-step="details"><span class="mr-progress-label"><b>02</b> Details</span><span class="mr-progress-bar"/></li>
-            <li data-step="send"><span class="mr-progress-label"><b>03</b> Send</span><span class="mr-progress-bar"/></li>
+            <li data-step="choose"><span class="mr-progress-label"><b>01</b> <t t-out="step_labels[0]"/></span><span class="mr-progress-bar"/></li>
+            <li data-step="details"><span class="mr-progress-label"><b>02</b> <t t-out="step_labels[1]"/></span><span class="mr-progress-bar"/></li>
+            <li data-step="send"><span class="mr-progress-label"><b>03</b> <t t-out="step_labels[2]"/></span><span class="mr-progress-bar"/></li>
         </ol>
     </template>
 
@@ -314,6 +316,7 @@
             </t>
 
             <a class="mr-submit mr-again" href="/matsafe/report">Report something else</a>
+            <p class="mr-more"><a href="/matsafe/rate">Rate your training partners</a></p>
         </main>
     </body>
 </html>
@@ -368,6 +371,175 @@
                 <p class="mr-text">Otherwise please tell a coach in person.</p>
                 <a class="mr-submit mr-again" href="/matsafe/report">Report something</a>
             </t>
+        </main>
+    </body>
+</html>
+    </template>
+
+    <!-- /matsafe/rate : rate your training partners. Same brand as the report form (report.css).
+         step: code (member code) -> class (one of their classes) -> rate (a score per partner).
+         No JavaScript needed: every step is a normal POST, checked again by the server. -->
+    <template id="rate_page" name="MatSafe: Rate Partners">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Rate your training partners | MatSafe</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/report.css?v=#{asset_version}"/>
+    </head>
+    <body>
+        <t t-call="matsafe.report_top">
+            <t t-set="progress_at" t-value="{'code': 'choose', 'class': 'details', 'rate': 'send'}[step]"/>
+            <t t-set="progress_labels" t-value="rate_steps"/>
+        </t>
+
+        <main class="mr-page">
+            <h1 class="mr-title">Rate your partners</h1>
+            <p t-if="step == 'code'" class="mr-lead">How safely did your partners train with you? It takes a minute.</p>
+            <!-- No name here: the page never confirms whose member code was typed -->
+            <p t-if="step == 'class' and sessions" class="mr-lead">Pick the class you want to rate.</p>
+
+            <div t-if="errors" class="mr-errors" role="alert">
+                <p t-foreach="errors" t-as="error" t-out="error"/>
+            </div>
+
+            <!-- Step 1: who is rating -->
+            <form t-if="step == 'code'" action="/matsafe/rate" method="post" novalidate="novalidate">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <input type="hidden" name="step" value="code"/>
+                <div class="mr-field">
+                    <label class="mr-label" for="mr-code">Member code</label>
+                    <input type="text" id="mr-code" name="member_code" class="mr-input" maxlength="40"
+                           autocomplete="off" autocapitalize="characters" t-att-value="values.get('member_code')"/>
+                    <p class="mr-hint">Your partners will never see who rated them.</p>
+                </div>
+                <button type="submit" class="mr-submit">Next</button>
+            </form>
+
+            <!-- Step 2: which class -->
+            <t t-elif="step == 'class'">
+                <form t-if="sessions" action="/matsafe/rate" method="post" novalidate="novalidate">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <input type="hidden" name="step" value="class"/>
+                    <input type="hidden" name="member_code" t-att-value="values.get('member_code')"/>
+                    <fieldset class="mr-field">
+                        <legend class="mr-label">Which class?</legend>
+                        <p class="mr-hint">Your classes of the last 14 days, newest first.</p>
+                        <div class="mr-options">
+                            <label t-foreach="sessions" t-as="option" class="mr-option">
+                                <input type="radio" name="session_id" t-att-value="option['id']"
+                                       t-att-checked="values.get('session_id') == option['id']"/>
+                                <span class="mr-option-title" t-out="option['label']"/>
+                                <span class="mr-option-meta">
+                                    <t t-if="option['partners'] == 1">1 partner</t>
+                                    <t t-elif="option['partners']"><t t-out="option['partners']"/> partners</t>
+                                    <t t-else="">No partners recorded</t>
+                                </span>
+                            </label>
+                        </div>
+                    </fieldset>
+                    <button type="submit" class="mr-submit">Next</button>
+                </form>
+                <t t-else="">
+                    <div class="mr-empty">
+                        <h2 class="mr-empty-title">No recent classes</h2>
+                        <p>We could not find a class you took part in during the last 14 days.
+                           Once your coach records a class with you in it, you can rate your partners here.</p>
+                    </div>
+                    <a class="mr-submit mr-again" href="/matsafe/rate">Start again</a>
+                </t>
+            </t>
+
+            <!-- Step 3: a score per partner -->
+            <t t-else="">
+                <p class="mr-lead">Class: <strong t-out="session_label"/></p>
+                <!-- Back to the class list: a POST again, so the member code never goes in the address -->
+                <form action="/matsafe/rate" method="post">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <input type="hidden" name="step" value="code"/>
+                    <input type="hidden" name="member_code" t-att-value="values.get('member_code')"/>
+                    <button type="submit" class="mr-change">Choose another class</button>
+                </form>
+
+                <t t-if="partners">
+                    <p class="mr-note">Your partner will never see who rated them.</p>
+                    <form action="/matsafe/rate" method="post" novalidate="novalidate">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="step" value="save"/>
+                        <input type="hidden" name="member_code" t-att-value="values.get('member_code')"/>
+                        <input type="hidden" name="session_id" t-att-value="values.get('session_id')"/>
+
+                        <section t-foreach="partners" t-as="info" class="mr-partner">
+                            <t t-set="partner" t-value="info['partner']"/>
+                            <div class="mr-partner-head">
+                                <h2 class="mr-partner-name" t-out="partner.name"/>
+                                <span t-if="info['rated']" class="mr-tag">Already rated</span>
+                            </div>
+                            <t t-if="not info['rated']">
+                                <fieldset class="mr-field" data-widget="scale">
+                                    <legend class="mr-label">Control and safety</legend>
+                                    <p class="mr-hint">1 = too rough, 5 = very controlled</p>
+                                    <div class="mr-chips mr-scale mr-scale-rate">
+                                        <label t-foreach="['1', '2', '3', '4', '5']" t-as="score" class="mr-chip">
+                                            <input type="radio" t-att-name="'score_%d' % partner.id" t-att-value="score"
+                                                   t-att-checked="values.get('scores', {}).get(partner.id) == score"/>
+                                            <span t-out="score"/>
+                                        </label>
+                                    </div>
+                                </fieldset>
+                                <div class="mr-field mr-field-last">
+                                    <label class="mr-label" t-att-for="'comment_%d' % partner.id">
+                                        Comment <span class="mr-optional">(optional)</span>
+                                    </label>
+                                    <input type="text" class="mr-input" maxlength="120"
+                                           t-att-id="'comment_%d' % partner.id" t-att-name="'comment_%d' % partner.id"
+                                           t-att-value="values.get('comments', {}).get(partner.id)"/>
+                                </div>
+                            </t>
+                        </section>
+
+                        <button t-if="open_count" type="submit" class="mr-submit">Send ratings</button>
+                        <p t-else="" class="mr-lead">You have rated everyone from this class. Thank you!</p>
+                    </form>
+                </t>
+                <div t-else="" class="mr-empty">
+                    <h2 class="mr-empty-title">No partners recorded</h2>
+                    <p>Your coach did not record who you trained with in this class, so there is no one to rate.
+                       Choose another class, or ask your coach to add the pairings.</p>
+                </div>
+            </t>
+        </main>
+    </body>
+</html>
+    </template>
+
+    <!-- Thank-you page of /matsafe/rate. `done` holds only a count and the class: no names. -->
+    <template id="rate_thanks" name="MatSafe: Ratings Sent">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Ratings sent | MatSafe</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/report.css?v=#{asset_version}"/>
+    </head>
+    <body>
+        <t t-call="matsafe.report_top">
+            <t t-set="progress_at" t-value="'done'"/>
+            <t t-set="progress_labels" t-value="rate_steps"/>
+        </t>
+
+        <main class="mr-page mr-thanks">
+            <t t-call="matsafe.report_badge">
+                <t t-set="badge" t-value="'check'"/>
+            </t>
+            <h1 class="mr-title">Thank you</h1>
+            <p class="mr-lead">
+                <t t-if="done.get('count') == 1">Your rating</t><t t-else="">Your <t t-out="done.get('count')"/> ratings</t>
+                for <strong t-out="done.get('session')"/> <t t-if="done.get('count') == 1">was</t><t t-else="">were</t> saved.
+            </p>
+            <p class="mr-text">Your partner will never see who rated them. Coaches use ratings to keep sparring safe.</p>
+            <a class="mr-submit mr-again" href="/matsafe/rate">Rate another class</a>
+            <p class="mr-more"><a href="/matsafe/report">Report something</a></p>
         </main>
     </body>
 </html>
