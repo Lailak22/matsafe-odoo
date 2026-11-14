@@ -30,6 +30,8 @@
                             invisible="state != 'running'"/>
                     <button name="action_end" type="object" string="End"
                             invisible="state != 'running'"/>
+                    <button name="action_open_pair_cam" type="object" string="Pair by Camera" icon="fa-camera"
+                            invisible="state == 'done'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,running,done"/>
                 </header>
                 <sheet>
