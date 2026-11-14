@@ -73,6 +73,51 @@
         </field>
     </record>
 
+    <!-- Members: hide Odoo's default contact fields and tabs that MatSafe doesn't use.
+         Non-member contacts (the company, admin, suppliers) still see the normal form.
+         "add ... separator or" keeps each field's own visibility rule and adds "or is_member". -->
+    <record id="view_partner_form_matsafe_hide_defaults" model="ir.ui.view">
+        <field name="name">res.partner.form.matsafe.hide.defaults</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_type']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//field[@name='parent_id']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//field[@name='function']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//field[@name='vat']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//field[@name='website']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//field[@name='category_id']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//page[@name='contact_addresses']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//page[@name='sales_purchases']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//page[@name='internal_notes']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//page[@name='accounting']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+            <xpath expr="//page[@name='accounting_disabled']" position="attributes">
+                <attribute name="invisible" add="is_member" separator=" or "/>
+            </xpath>
+        </field>
+    </record>
+
     <!-- Member list (only used by the Members menu, so priority is high) -->
     <record id="view_partner_member_list" model="ir.ui.view">
         <field name="name">res.partner.list.matsafe.member</field>

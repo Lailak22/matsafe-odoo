@@ -15,6 +15,8 @@
         'data/mail_templates.xml',
         'data/project_data.xml',
         'data/demo_data.xml',
+        'data/demo_extra.xml',
+        'data/website_menu.xml',
         'views/partner_views.xml',
         'views/session_views.xml',
         'views/report_views.xml',
@@ -26,6 +28,17 @@
         'views/website_templates.xml',
         'views/menus.xml',
     ],
+    'assets': {
+        # Backend look matching the member pages (see static/src/scss/)
+        'web._assets_primary_variables': [
+            # prepend: our colours are set BEFORE Odoo's defaults (which use !default), so
+            # every colour Odoo derives from them (buttons, links, status bar) turns red too
+            ('prepend', 'matsafe/static/src/scss/primary_variables.scss'),
+        ],
+        'web.assets_backend': [
+            'matsafe/static/src/scss/backend.scss',
+        ],
+    },
     'installable': True,
     'application': True,
     'license': 'LGPL-3',

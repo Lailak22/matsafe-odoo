@@ -48,6 +48,14 @@
             <a class="mr-logo" href="/matsafe/report">MatSafe</a>
             <p class="mr-tagline">Safe mats. Safe partners.</p>
         </header>
+        <!-- Links between the member pages, and into the Odoo app for staff -->
+        <t t-set="is_staff" t-value="request and not request.env.user._is_public()"/>
+        <nav class="mr-nav" aria-label="MatSafe pages">
+            <a href="/matsafe/report">Report</a>
+            <a href="/matsafe/rate">Rate partners</a>
+            <a t-if="is_staff" class="mr-nav-staff" href="/odoo/action-matsafe.action_matsafe_report">Open MatSafe app</a>
+            <a t-else="" class="mr-nav-staff" href="/web/login?redirect=/odoo/action-matsafe.action_matsafe_report">Staff login</a>
+        </nav>
         <!-- Scoreboard steps: the red bar sits under the current one -->
         <ol t-if="progress_at" id="mr-progress" class="mr-progress" t-att-data-at="progress_at" aria-label="Progress">
             <li data-step="choose"><span class="mr-progress-label"><b>01</b> <t t-out="step_labels[0]"/></span><span class="mr-progress-bar"/></li>
@@ -553,6 +561,8 @@
         <header class="ms-top">
             <span class="ms-logo">MatSafe</span>
             <span class="ms-screen-label" t-out="screen_label"/>
+            <!-- Small link into the Odoo app (door log); asks staff to log in first -->
+            <a class="ms-staff" href="/odoo/action-matsafe.action_matsafe_checkin">Staff</a>
         </header>
     </template>
 

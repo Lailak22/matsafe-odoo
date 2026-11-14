@@ -1,0 +1,9 @@
+// MatSafe backend colours: the same brand as Hoor's report form and kiosk
+// (report.css / kiosk.css): near-black ink, warm off-white, ONE accent colour: mat red.
+// Loaded after Odoo's own primary variables, so these values win.
+$o-community-color: #d7261e;
+$o-enterprise-color: #d7261e;
+$o-brand-odoo: #d7261e;
+$o-brand-primary: #d7261e;
+$o-action: #b01e17;
+$o-webclient-background-color: #f4f1ea;

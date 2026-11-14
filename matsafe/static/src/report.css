@@ -956,3 +956,35 @@ select.mr-input {
         transition: none !important;
     }
 }
+
+
+/* ---- Links between member pages + into the Odoo app (added by Person C) ---- */
+.mr-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    max-width: 680px;
+    margin: 10px auto 0;
+    padding: 0 16px;
+    font-family: var(--mr-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.mr-nav a {
+    color: var(--mr-ink);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+}
+
+.mr-nav a:hover,
+.mr-nav a:focus-visible {
+    border-bottom-color: var(--mr-red);
+}
+
+.mr-nav .mr-nav-staff {
+    margin-left: auto;
+    color: var(--mr-red-dark);
+}

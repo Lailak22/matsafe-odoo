@@ -1,0 +1,152 @@
+/* MatSafe backend look, matching the member pages (report.css / kiosk.css):
+   near-black top bar with the red-and-black mat tape, Oswald condensed uppercase headings,
+   warm off-white background. Colours come from primary_variables.scss. */
+
+@font-face {
+    font-family: "MatSafe Display";
+    src: url("/web/static/fonts/google/Oswald/Oswald-SemiBold.ttf") format("truetype");
+    font-weight: 500 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MatSafe Display";
+    src: url("/web/static/fonts/google/Oswald/Oswald-Bold.ttf") format("truetype");
+    font-weight: 700 900;
+    font-display: swap;
+}
+
+/* ---- Top bar: ink black with the mat tape underneath ---- */
+.o_main_navbar {
+    background-color: #111111 !important;
+    border-bottom: 0 !important;
+    box-shadow: 0 4px 0 0 #d7261e;
+    margin-bottom: 4px;
+}
+
+.o_main_navbar .o_menu_brand,
+.o_main_navbar .o_nav_entry,
+.o_main_navbar .dropdown-toggle,
+.o_main_navbar .o_menu_toggle,
+.o_main_navbar .o_navbar_apps_menu .dropdown-toggle {
+    color: #ffffff !important;
+}
+
+.o_main_navbar .o_nav_entry:hover,
+.o_main_navbar .dropdown-toggle:hover,
+.o_main_navbar .dropdown-toggle.show {
+    background-color: #2a2a2a !important;
+}
+
+.o_main_navbar .o_menu_brand {
+    font-family: "MatSafe Display", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.o_main_navbar .o_menu_sections .dropdown-toggle,
+.o_main_navbar .o_menu_sections .o_nav_entry {
+    font-family: "MatSafe Display", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* ---- Headings: condensed uppercase like the posters on the member pages ---- */
+.o_control_panel .o_breadcrumb .active,
+.o_control_panel .o_breadcrumb .o_last_breadcrumb_item,
+.o_form_view .oe_title h1,
+.o_kanban_view .o_column_title,
+.o_kanban_view .o_kanban_header_title {
+    font-family: "MatSafe Display", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.o_form_view .o_horizontal_separator,
+.o_form_view .o_group .o_horizontal_separator,
+.o_form_view .o_notebook .nav-link {
+    font-family: "MatSafe Display", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* ---- Flat, confident borders instead of soft shadows on the main sheet ---- */
+.o_form_view .o_form_sheet_bg .o_form_sheet {
+    border: 2px solid #111111;
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+/* ---- Backup: force mat red on buttons and accents, in case another module
+        builds its colours before ours ---- */
+.o_web_client .btn-primary,
+.o_web_client .btn-primary:focus {
+    background-color: #d7261e !important;
+    border-color: #d7261e !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .btn-primary:hover,
+.o_web_client .btn-primary:active,
+.o_web_client .btn-primary.active {
+    background-color: #b01e17 !important;
+    border-color: #b01e17 !important;
+}
+
+.o_web_client .btn-outline-primary {
+    color: #b01e17 !important;
+    border-color: #d7261e !important;
+}
+
+.o_web_client .btn-outline-primary:hover {
+    background-color: #d7261e !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .btn-link,
+.o_web_client a:not(.btn):not(.dropdown-item):not(.nav-link):not(.o_menu_brand):not(.o_nav_entry) {
+    color: #b01e17;
+}
+
+.o_web_client .text-primary {
+    color: #d7261e !important;
+}
+
+.o_web_client .form-check-input:checked {
+    background-color: #d7261e !important;
+    border-color: #d7261e !important;
+}
+
+/* Status bar: current step */
+.o_web_client .o_statusbar_status .o_arrow_button_current {
+    background-color: #d7261e !important;
+    border-color: #d7261e !important;
+    color: #ffffff !important;
+}
+
+/* Active tab and active search facets */
+.o_web_client .nav-tabs .nav-link.active {
+    border-top-color: #d7261e !important;
+    color: #111111 !important;
+}
+
+.o_web_client .o_searchview_facet .o_searchview_facet_label {
+    background-color: #d7261e !important;
+    color: #ffffff !important;
+}
+
+/* Buttons inside the black top bar (app menu, systray, "New") */
+.o_main_navbar .btn,
+.o_main_navbar .o_menu_systray .dropdown-toggle,
+.o_main_navbar .o_menu_systray i {
+    color: #ffffff !important;
+}
+
+.o_main_navbar .o_menu_systray .badge {
+    background-color: #d7261e !important;
+    color: #ffffff !important;
+}
