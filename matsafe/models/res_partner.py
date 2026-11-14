@@ -36,6 +36,12 @@ class ResPartner(models.Model):
         string="Usual Sessions / Week", compute='_compute_checkin_stats', store=True,
         help="Allowed check-ins in the last 28 days divided by 4.",
     )
+    rtp_stage = fields.Selection([
+        ('no_sparring', 'No Sparring'),
+        ('drilling', 'Drilling'),
+        ('light_sparring', 'Light Sparring'),
+        ('full', 'Full'),
+    ], string="Return-to-Play Stage", help="Shown on the kiosk. Empty = no restriction.")
     open_report_id = fields.Many2one('matsafe.report', string="Open Report", copy=False)
 
     _member_code_unique = models.Constraint(
@@ -93,7 +99,8 @@ class ResPartner(models.Model):
         members = self.search([
             ('is_member', '=', True),
             ('member_state', '=', 'active'),
-            ('open_report_id', '=', False),  # frozen flag from an open report
+            # Paused only by an open skin/viral/injury/head report; 'other' keeps billing
+            '|', ('open_report_id', '=', False), ('open_report_id.report_type', '=', 'other'),
             ('monthly_fee', '>', 0),
         ])
         moves = self.env['account.move']
