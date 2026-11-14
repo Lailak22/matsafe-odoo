@@ -41,8 +41,10 @@ class MatsafeSession(models.Model):
             # Remove previous auto pairings of this session (camera/manual ones stay)
             session.pairing_ids.filtered(lambda p: p.source == 'auto').unlink()
 
-            # Only active members, lightest first
-            pool = session.attendee_ids.filtered(lambda m: m.member_state == 'active').sorted('weight_kg')
+            # Only active members not limited by return-to-play, lightest first
+            pool = session.attendee_ids.filtered(
+                lambda m: m.member_state == 'active' and m.rtp_stage not in ('no_sparring', 'drilling')
+            ).sorted('weight_kg')
             pool = list(pool)
             pairs = []
             while len(pool) >= 2:
@@ -81,6 +83,12 @@ class MatsafeSession(models.Model):
             })
             session.cleaning_task_id = task
         return True
+
+    def action_open_pair_cam(self):
+        self.ensure_one()
+        return {'type': 'ir.actions.act_url',
+                'url': '/matsafe/pair-cam?session_id=%s' % self.id,
+                'target': 'new'}
 
     def _get_cleaning_project(self):
         # sudo: coaches may not have Project rights
