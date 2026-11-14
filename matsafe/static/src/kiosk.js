@@ -6,13 +6,14 @@
     const MODEL_URL = '/matsafe/static/model/model.json';       // added by Person D
     const METADATA_URL = '/matsafe/static/model/metadata.json'; // added by Person D
     const CHECKIN_URL = '/matsafe/checkin';
-    const PREDICT_EVERY_MS = 300;  // one prediction every 300 ms
+    const PREDICT_EVERY_MS = 500;  // one prediction every 500 ms
     const MIN_PROBABILITY = 0.90;  // the top class must be above this...
     const HOLD_MS = 1500;          // ...for 1.5 seconds in a row
     const RESULT_MS = 3000;        // the green / red screen stays 3 seconds
     const IGNORE_MS = 10000;       // the same face is ignored for 10 seconds after a result
     const NOBODY = 'nobody';       // class name that means "no one at the camera"
-    const CAMERA_SIZE = 400;       // webcam picture size in pixels
+    const CAMERA_SIZE = 224;       // webcam picture size in pixels = the model's input size (CSS scales it up)
+    const DRAW_EVERY_MS = 1000 / 15;  // camera preview at most 15 frames per second
     const SCAN_TEXT = 'Look at the camera';
 
     // ---- Page elements --------------------------------------------------
@@ -25,7 +26,9 @@
 
     // ---- State ----------------------------------------------------------
     let model = null;
+    let modelPromise = null;  // the model is downloaded once, even if loadModel() is called again
     let webcam = null;
+    let loopId = 0;           // each (re)start of the camera loops gets a new id; older loops stop
     let busy = false;         // true while a check-in is being sent or a result is on screen
     let streakLabel = null;   // the face we are currently confirming
     let streakStart = 0;      // when we first saw that face
@@ -79,6 +82,7 @@
         setTimeout(function () {
             hideResult();
             busy = false;
+            resumeScanning();
         }, RESULT_MS);
     }
 
@@ -110,27 +114,70 @@
     }
 
     // ---- Webcam loops ---------------------------------------------------
-    function drawLoop() {
-        webcam.update();  // copy the current video frame to the canvas
-        requestAnimationFrame(drawLoop);
+    // Both loops stop while `busy` (the result screen covers the camera) and
+    // resumeScanning() starts them again. A loop also stops if a newer one was started.
+    let lastDraw = 0;
+    function drawLoop(id) {
+        if (busy || id !== loopId) {
+            return;
+        }
+        // requestAnimationFrame runs ~60 times a second: only copy a frame 15 times a second
+        const now = performance.now();
+        if (now - lastDraw >= DRAW_EVERY_MS) {
+            lastDraw = now;
+            webcam.update();  // copy the current video frame to the canvas
+        }
+        requestAnimationFrame(function () { drawLoop(id); });
     }
 
-    async function predictLoop() {
-        if (!busy) {
-            try {
-                const predictions = await model.predict(webcam.canvas);
-                let top = predictions[0];
-                for (const prediction of predictions) {
-                    if (prediction.probability > top.probability) {
-                        top = prediction;
-                    }
-                }
-                onPrediction(top.className, top.probability);
-            } catch (error) {
-                console.warn('MatSafe: prediction failed', error);
-            }
+    async function predictLoop(id) {
+        if (busy || id !== loopId) {
+            return;
         }
-        setTimeout(predictLoop, PREDICT_EVERY_MS);
+        try {
+            const predictions = await model.predict(webcam.canvas);
+            let top = predictions[0];
+            for (const prediction of predictions) {
+                if (prediction.probability > top.probability) {
+                    top = prediction;
+                }
+            }
+            onPrediction(top.className, top.probability);
+        } catch (error) {
+            console.warn('MatSafe: prediction failed', error);
+        }
+        if (!busy && id === loopId) {
+            setTimeout(function () { predictLoop(id); }, PREDICT_EVERY_MS);
+        }
+    }
+
+    function resumeScanning() {
+        if (!model || !webcam) {
+            return;  // model or camera not ready: only the member code box works
+        }
+        const id = ++loopId;
+        setStatus(SCAN_TEXT);
+        requestAnimationFrame(function () { drawLoop(id); });
+        setTimeout(function () { predictLoop(id); }, PREDICT_EVERY_MS);
+    }
+
+    // The first prediction is slow (TensorFlow.js prepares its WebGL code), so do it now
+    // on a blank canvas instead of when the first member stands at the door.
+    async function warmUp() {
+        const blank = document.createElement('canvas');
+        blank.width = blank.height = CAMERA_SIZE;
+        try {
+            await model.predict(blank);
+        } catch (error) {
+            console.warn('MatSafe: warm-up prediction failed', error);  // not fatal: scanning still works
+        }
+    }
+
+    function loadModel() {
+        if (!modelPromise) {
+            modelPromise = tmImage.load(MODEL_URL, METADATA_URL);
+        }
+        return modelPromise;
     }
 
     // ---- Start ----------------------------------------------------------
@@ -138,7 +185,8 @@
         // 1. Face model. If the libraries or the model files are missing, the code box still works.
         try {
             setStatus('Loading face model...');
-            model = await tmImage.load(MODEL_URL, METADATA_URL);
+            model = await loadModel();
+            await warmUp();
         } catch (error) {
             console.warn('MatSafe: face model not loaded', error);
             setStatus('Face model not loaded, use member code');
@@ -155,9 +203,7 @@
             return;
         }
         cameraEl.appendChild(webcam.canvas);
-        setStatus(SCAN_TEXT);
-        requestAnimationFrame(drawLoop);
-        predictLoop();
+        resumeScanning();
     }
 
     // ---- Member code fallback -------------------------------------------
@@ -173,7 +219,7 @@
     });
 
     // For testing without a camera, from the browser console: call
-    // matsafeKiosk.onPrediction('Hoor', 0.99) every 300 ms for 2 seconds.
+    // matsafeKiosk.onPrediction('Hoor', 0.99) every 500 ms for 2 seconds.
     window.matsafeKiosk = {onPrediction: onPrediction};
 
     start();
