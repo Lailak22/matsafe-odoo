@@ -1,0 +1,145 @@
+/* MatSafe door kiosk: dark full-screen page with large bold text */
+
+* {
+    box-sizing: border-box;
+}
+
+/* The "hidden" attribute must win over display:flex below */
+[hidden] {
+    display: none !important;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    background: #0b0f14;
+    color: #ffffff;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Logo text at the top */
+.ms-logo {
+    padding: 20px 16px 8px;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+}
+
+.ms-logo span {
+    color: #22c55e;
+}
+
+/* Middle: webcam picture + status line */
+.ms-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 16px;
+    min-height: 0;
+}
+
+/* Empty until the webcam starts */
+.ms-camera:empty {
+    display: none;
+}
+
+.ms-camera canvas {
+    display: block;
+    width: min(55vh, 90vw);
+    height: auto;
+    border: 4px solid #1f2937;
+    border-radius: 20px;
+}
+
+.ms-status {
+    margin: 0;
+    font-size: clamp(1.6rem, 4.5vw, 3rem);
+    line-height: 1.2;
+}
+
+/* Small grey line (pairing page: session name, "Partner 1: ...") */
+.ms-info {
+    margin: 0;
+    min-height: 1.4em;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+/* Bottom: small member code fallback */
+.ms-code {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 16px 20px;
+    border-top: 1px solid #1f2937;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.ms-code input,
+.ms-code button {
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 1.1rem;
+}
+
+.ms-code input {
+    width: 180px;
+    border: 2px solid #374151;
+    background: #111827;
+    color: #ffffff;
+    text-align: center;
+}
+
+.ms-code input:focus {
+    outline: none;
+    border-color: #22c55e;
+}
+
+.ms-code button {
+    border: 0;
+    background: #22c55e;
+    color: #04130a;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* Result screen: covers everything for 3 seconds */
+.ms-result {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5vw;
+    font-size: clamp(2.5rem, 9vw, 7rem);
+    font-weight: 900;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.ms-allowed {
+    background: #15803d;
+}
+
+.ms-blocked {
+    background: #b91c1c;
+}
