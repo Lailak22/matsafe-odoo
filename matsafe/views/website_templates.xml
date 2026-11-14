@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- /matsafe/report : public self-report form (mobile first) -->
+    <template id="report_form" name="MatSafe: Report Form">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Report a skin issue or injury</t>
+            <div id="wrap">
+                <div class="container py-4">
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-md-8 col-lg-6">
+                            <h1 class="h2 mb-2">Report a skin issue or injury</h1>
+                            <p class="text-muted">
+                                Tell us before you train. Your recent training partners are warned
+                                without your name.
+                            </p>
+
+                            <!-- Error from the controller (wrong code, missing consent...) -->
+                            <div t-if="error" class="alert alert-danger" role="alert" t-out="error"/>
+
+                            <form action="/matsafe/report" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                                <div class="mb-3">
+                                    <label for="member_code" class="form-label fw-bold">Member code</label>
+                                    <input type="text" id="member_code" name="member_code"
+                                           class="form-control form-control-lg" required="required"
+                                           autocomplete="off" autocapitalize="characters"
+                                           t-att-value="values.get('member_code')"/>
+                                </div>
+
+                                <fieldset class="mb-3">
+                                    <legend class="form-label fw-bold fs-6">What are you reporting?</legend>
+                                    <div t-foreach="report_types" t-as="rtype" class="form-check py-1">
+                                        <input type="radio" name="report_type" class="form-check-input"
+                                               required="required"
+                                               t-att-id="'report_type_' + rtype[0]"
+                                               t-att-value="rtype[0]"
+                                               t-att-checked="values.get('report_type') == rtype[0]"/>
+                                        <label class="form-check-label" t-att-for="'report_type_' + rtype[0]"
+                                               t-out="rtype[1]"/>
+                                    </div>
+                                </fieldset>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label fw-bold">Description</label>
+                                    <textarea id="description" name="description" class="form-control" rows="4"
+                                              placeholder="Where is it, and since when?"><t t-out="values.get('description')"/></textarea>
+                                    <div class="form-text">Only head coaches can read this.</div>
+                                </div>
+
+                                <div class="form-check mb-4">
+                                    <input type="checkbox" id="consent" name="consent" value="1"
+                                           class="form-check-input" required="required"/>
+                                    <label class="form-check-label" for="consent">
+                                        I agree my report is used to protect my training partners anonymously
+                                    </label>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg w-100">Send report</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Thank-you page shown after a report is saved -->
+    <template id="report_thanks" name="MatSafe: Report Sent">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Report sent</t>
+            <div id="wrap">
+                <div class="container py-5">
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-md-8 col-lg-6 text-center">
+                            <h1 class="h2 mb-3">Thank you</h1>
+                            <p class="lead">
+                                Your report was received. Your recent training partners will be
+                                alerted anonymously: they will not see your name.
+                            </p>
+                            <p class="text-muted">
+                                Door check-in is paused for you until a head coach clears you.
+                                Rest up, and see you back on the mats soon.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>
