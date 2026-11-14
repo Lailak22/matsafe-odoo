@@ -88,4 +88,43 @@
             </div>
         </t>
     </template>
+
+    <!-- /matsafe/kiosk : full-screen door page. Standalone HTML: no website header/footer.
+         JS, CSS and the two libraries are plain static files (the libraries are local copies,
+         so the kiosk works without internet). -->
+    <template id="kiosk" name="MatSafe: Door Kiosk">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>MatSafe Kiosk</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/kiosk.css?v=#{asset_version}"/>
+    </head>
+    <body>
+        <header class="ms-logo">Mat<span>Safe</span></header>
+
+        <main class="ms-main">
+            <!-- kiosk.js puts the webcam picture here -->
+            <div id="ms-camera" class="ms-camera"></div>
+            <p id="ms-status" class="ms-status">Starting...</p>
+        </main>
+
+        <!-- Fallback: type the member code -->
+        <form id="ms-code-form" class="ms-code" autocomplete="off">
+            <label for="ms-code-input">Enter member code</label>
+            <input id="ms-code-input" type="text" name="member_code" autocapitalize="characters"/>
+            <button type="submit">Check in</button>
+        </form>
+
+        <!-- Big green / red result screen, shown by kiosk.js -->
+        <div id="ms-result" class="ms-result" role="alert" hidden="hidden">
+            <div id="ms-result-text"></div>
+        </div>
+
+        <script src="/matsafe/static/src/lib/tf.min.js"></script>
+        <script src="/matsafe/static/src/lib/teachablemachine-image.min.js"></script>
+        <script t-attf-src="/matsafe/static/src/kiosk.js?v=#{asset_version}"></script>
+    </body>
+</html>
+    </template>
 </odoo>

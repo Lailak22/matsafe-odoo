@@ -1,7 +1,9 @@
 import logging
+import os
 
 from odoo import http
 from odoo.http import request
+from odoo.tools.misc import file_path
 
 _logger = logging.getLogger(__name__)
 
@@ -73,6 +75,19 @@ class MatsafeWebsite(http.Controller):
             'values': values or {},
             'error': error,
         })
+
+    # ------------------------------------------------------------------
+    # /matsafe/kiosk : full-screen door page (webcam + Teachable Machine)
+    # ------------------------------------------------------------------
+    @http.route('/matsafe/kiosk', type='http', auth='public', methods=['GET'])
+    def kiosk(self, **kw):
+        return request.render('matsafe.kiosk', {'asset_version': self._kiosk_asset_version()})
+
+    def _kiosk_asset_version(self):
+        """Last change time of kiosk.js / kiosk.css, added to their URLs as ?v=...
+        Browsers keep Odoo static files for a week; this makes them reload after an edit."""
+        paths = [file_path('matsafe/static/src/' + name) for name in ('kiosk.js', 'kiosk.css')]
+        return int(max(os.path.getmtime(path) for path in paths))
 
     # ------------------------------------------------------------------
     # /matsafe/checkin : door check-in, called by the kiosk (JSON-RPC)
