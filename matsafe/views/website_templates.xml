@@ -191,15 +191,20 @@
             <t t-if="done.get('pending')">
                 <h1 class="mr-title">Almost done</h1>
                 <p class="mr-lead">Your report is saved and waits for your confirmation.</p>
-                <p class="mr-text">
+                <!-- Demo mode (system parameter matsafe.demo_mode = 1): the link of the email as a button -->
+                <t t-if="done.get('demo_link')">
+                    <a class="mr-submit mr-demo" t-att-href="done['demo_link']">Demo: open the confirmation email</a>
+                    <p class="mr-text mr-demo-note">Demo mode: in real use this link only arrives by email.</p>
+                </t>
+                <p t-else="" class="mr-text">
                     Check your email to confirm your report. No email? Tell a coach, so they can confirm it for you.
                 </p>
                 <p class="mr-text">Nothing changes for you or your training partners until it is confirmed.</p>
                 <p t-if="kind.get('note')" class="mr-note" t-out="kind['note']"/>
             </t>
 
-            <!-- Cards 1 to 4 when the report is open at once (matsafe.report without a
-                 confirmation step): its chain has already run -->
+            <!-- Cards 1 to 4 once the report is open (after the confirmation link):
+                 its chain has run -->
             <t t-elif="kind['save_as'] == 'report'">
                 <h1 class="mr-title">Thank you</h1>
                 <t t-set="health" t-value="kind['key'] in ('skin', 'sick')"/>
@@ -247,6 +252,57 @@
             </t>
 
             <a class="mr-submit mr-again" href="/matsafe/report">Report something else</a>
+        </main>
+    </body>
+</html>
+    </template>
+
+    <!-- /matsafe/report/confirm/<token> : opened from the confirmation email.
+         Opening the link changes nothing; the button sends a POST and that confirms the report.
+         `kind` is empty when the link is wrong or was already used. -->
+    <template id="report_confirm" name="MatSafe: Confirm Report">&lt;!DOCTYPE html&gt;
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <!-- The address of this page holds the token: keep it out of search engines and other sites -->
+        <meta name="robots" content="noindex"/>
+        <meta name="referrer" content="no-referrer"/>
+        <title>Confirm your report | MatSafe</title>
+        <link rel="stylesheet" t-attf-href="/matsafe/static/src/report.css?v=#{asset_version}"/>
+    </head>
+    <body>
+        <header class="mr-top">
+            <a class="mr-logo" href="/matsafe/report">Mat<span>Safe</span></a>
+        </header>
+
+        <main class="mr-page mr-thanks">
+            <t t-if="kind">
+                <h1 class="mr-title">Confirm your report</h1>
+                <p class="mr-lead">You sent a report: <strong t-out="kind['title']"/>.</p>
+                <p class="mr-text">
+                    Tap the button to confirm it was you. The gym's safety rules for this report start
+                    once you confirm.
+                </p>
+
+                <div t-if="error" class="mr-errors" role="alert">
+                    <p t-out="error"/>
+                </div>
+
+                <form class="mr-confirm" t-attf-action="/matsafe/report/confirm/#{token}" method="post">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <button type="submit" class="mr-submit">Confirm my report</button>
+                </form>
+
+                <p class="mr-text">If you did not send this report, close this page and tell a coach.</p>
+                <p t-if="kind.get('note')" class="mr-note" t-out="kind['note']"/>
+            </t>
+            <t t-else="">
+                <h1 class="mr-title">This link is no longer valid</h1>
+                <p class="mr-lead">If you already confirmed your report, there is nothing more to do.</p>
+                <p class="mr-text">Otherwise please tell a coach in person.</p>
+                <a class="mr-submit mr-again" href="/matsafe/report">Report something</a>
+            </t>
         </main>
     </body>
 </html>

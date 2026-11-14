@@ -31,6 +31,8 @@ SESSION_DAYS = 14                    # "which class": classes of the last 14 day
 CHECKIN_MATCH_HOURS = 2              # a door check-in this close to a class start counts as attending
 NOT_LISTED = 'other'                 # "which class": the "Class not listed" choice
 DONE_KEY = 'matsafe_report_done'     # what the thank-you page shows, kept in the visitor's session
+MAX_TOKEN = 64                       # longest confirmation token we look up
+DEMO_PARAM = 'matsafe.demo_mode'     # system parameter: "1" shows the confirmation link after submitting
 # One message for every identity problem, so nobody can test which part was wrong
 IDENTITY_ERROR = "We could not match those details. Please check them and try again."
 SAVE_ERROR = "Sorry, your report could not be saved. Please tell a coach in person."
@@ -247,15 +249,83 @@ class MatsafeWebsite(http.Controller):
             'report_type': report_type,
             'description': self._report_description(kind, answers, details),
         })
-        # Read the member again: the thank-you page only says what really happened
+        done = self._report_facts(report)
+        # Demo mode: no real email is sent during a demo, so the thank-you page shows the link.
+        # Otherwise the token never leaves the server (it is not even put in the session).
+        if done['pending'] and self._demo_mode():
+            done['demo_link'] = '/matsafe/report/confirm/%s' % report.confirm_token
+        return done
+
+    def _demo_mode(self):
+        """True when the system parameter matsafe.demo_mode is "1" (Settings > Technical > System Parameters)."""
+        return request.env['ir.config_parameter'].sudo().get_param(DEMO_PARAM) == '1'
+
+    def _report_facts(self, report):
+        """What really happened to a report and its member. The thank-you page only says these things."""
+        member = report.member_id
+        # Read the member again: the chain may just have changed it
         member.invalidate_recordset(['member_state'])
         return {
             'pending': report.state == 'pending',
             'door_paused': member.member_state in ('blocked', 'frozen'),
             'contacts': len(report.contact_ids),
             # Without this email template the chain only leaves a note on each contact
-            'emailed': bool(Report.env.ref('matsafe.mail_template_contact_alert', raise_if_not_found=False)),
+            'emailed': bool(report.env.ref('matsafe.mail_template_contact_alert', raise_if_not_found=False)),
         }
+
+    # ------------------------------------------------------------------
+    # /matsafe/report/confirm/<token> : the link in the confirmation email
+    # ------------------------------------------------------------------
+    # multilang=False: on multilang pages Odoo redirects to its own spelling of the URL, and a
+    # token holding "%25" never matches that spelling, so the page redirected to itself forever.
+    @http.route('/matsafe/report/confirm/<string:token>', type='http', auth='public', website=True,
+                methods=['GET', 'POST'], sitemap=False, multilang=False)
+    def report_confirm(self, token, **post):
+        report = self._pending_report(token)
+        values = {
+            'token': token,
+            'kind': self._kind_of_report(report) if report else None,  # None: the link is not valid
+            'error': None,
+            'asset_version': self._asset_version(),
+        }
+        # GET only shows a button. Mail scanners and link previews open links too,
+        # and they must never confirm a report: only the button (a POST) does.
+        if not report or request.httprequest.method == 'GET':
+            return request.render('matsafe.report_confirm', values)
+
+        try:
+            # savepoint: if the chain fails, undo it all and show a message instead of an error page
+            with request.env.cr.savepoint():
+                # pending -> open; matsafe.report then runs its chain itself
+                report.action_confirm()
+                done = self._report_facts(report)
+        except Exception:
+            _logger.exception("MatSafe: could not confirm report id %s", report.id)
+            values['error'] = "Sorry, your report could not be confirmed. Please tell a coach in person."
+            return request.render('matsafe.report_confirm', values)
+
+        # Same thank-you page as the form, now with what the chain really did
+        request.session[DONE_KEY] = dict(done, kind=values['kind']['key'])
+        return request.redirect('/matsafe/report?submitted=1')
+
+    def _pending_report(self, token):
+        """The matsafe.report waiting for this confirmation token, else an empty recordset.
+        A wrong token and an already used one look the same to the visitor."""
+        # sudo: the member is not logged in; knowing the token is the proof
+        Report = request.env['matsafe.report'].sudo()
+        token = (token or '').strip()
+        if not token or len(token) > MAX_TOKEN:
+            return Report
+        return Report.search([('confirm_token', '=', token), ('state', '=', 'pending')], limit=1)
+
+    def _kind_of_report(self, report):
+        """The card of report_kinds.py a matsafe.report belongs to, found by its report_type."""
+        kinds = [kind for kind in REPORT_KINDS if kind['save_as'] == 'report']
+        for key in ('report_type', 'fallback_type'):
+            for kind in kinds:
+                if kind.get(key) == report.report_type:
+                    return kind
+        return kinds[0]
 
     def _report_description(self, kind, answers, details):
         """Short text for the coach, for example:

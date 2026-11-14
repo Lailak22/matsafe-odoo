@@ -403,6 +403,21 @@ textarea.mr-input {
     margin-top: 28px;
 }
 
+/* Confirmation page: the "Confirm my report" button */
+.mr-confirm {
+    margin: 24px 0 16px;
+}
+
+/* Demo mode: the confirmation link as a button on the "Almost done" page */
+.mr-demo {
+    margin: 20px 0 8px;
+}
+
+.mr-demo-note {
+    font-size: 0.9rem;
+    opacity: 0.75;
+}
+
 /* ---- Wider screens: cards in two columns ---- */
 @media (min-width: 560px) {
     .mr-cards {
