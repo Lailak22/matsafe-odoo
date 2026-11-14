@@ -10,6 +10,7 @@
         'security/matsafe_security.xml',
         'security/ir.model.access.csv',
         'data/cron.xml',
+        'data/server_actions.xml',
         'views/menus.xml',
     ],
     'installable': True,

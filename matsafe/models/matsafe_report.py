@@ -175,3 +175,21 @@ class MatsafeReport(models.Model):
             member.message_post(body="MatSafe: report cleared by %s, member is active again."
                                 % self.env.user.name, subtype_xmlid='mail.mt_note')
         return True
+
+    # ------------------------------------------------------------------
+    # Scheduled action
+    # ------------------------------------------------------------------
+    def _cron_return(self):
+        """Daily: open reports past min_return_date -> ask the member to get cleared."""
+        overdue = self.search([
+            ('state', '=', 'open'),
+            ('min_return_date', '<', fields.Date.context_today(self)),
+        ])
+        for report in overdue:
+            report.member_id._matsafe_notify(
+                'matsafe.mail_template_return',
+                "MatSafe: your minimum time off is over. Please ask a head coach "
+                "to clear you before coming back to the mats.",
+                record=report,
+            )
+        return overdue

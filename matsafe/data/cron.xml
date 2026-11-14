@@ -1,5 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Placeholder: scheduled actions (ir_cron_absence, ir_cron_return, ir_cron_gear,
-         ir_cron_cleaning, ir_cron_invoicing) go here. See SHARED SPEC. -->
+    <!-- Daily: regular members who stopped coming -> "we miss you" email -->
+    <record id="ir_cron_absence" model="ir.cron">
+        <field name="name">MatSafe: Absence check</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_absence()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+    </record>
+
+    <!-- Daily: open reports past min_return_date -> ask for clearance -->
+    <record id="ir_cron_return" model="ir.cron">
+        <field name="name">MatSafe: Return-to-mat reminder</field>
+        <field name="model_id" ref="model_matsafe_report"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_return()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+    </record>
+
+    <!-- Hourly: gear stuck in laundry > 24h -> blocked + activity -->
+    <record id="ir_cron_gear" model="ir.cron">
+        <field name="name">MatSafe: Gear laundry check</field>
+        <field name="model_id" ref="model_matsafe_gear"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_gear()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+    </record>
+
+    <!-- Hourly: session within 1h on a mat with an open cleaning task -> warning -->
+    <record id="ir_cron_cleaning" model="ir.cron">
+        <field name="name">MatSafe: Mat cleaning warning</field>
+        <field name="model_id" ref="model_matsafe_session"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_cleaning()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+    </record>
+
+    <!-- Monthly: membership invoices for active members -->
+    <record id="ir_cron_invoicing" model="ir.cron">
+        <field name="name">MatSafe: Monthly membership invoicing</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_invoicing()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">months</field>
+    </record>
 </odoo>
