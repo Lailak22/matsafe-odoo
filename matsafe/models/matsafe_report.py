@@ -1,6 +1,8 @@
+import secrets
 from datetime import timedelta
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 RETURN_DAYS = {'skin': 7, 'injury': 14, 'other': 3}
 
@@ -21,9 +23,12 @@ class MatsafeReport(models.Model):
     description = fields.Text(groups="matsafe.group_head_coach")  # private: head coaches only
     date = fields.Datetime(default=fields.Datetime.now)
     state = fields.Selection([
+        ('pending', 'Pending'),   # waiting for the member's email confirmation
         ('open', 'Open'),
         ('cleared', 'Cleared'),
-    ], default='open', required=True, tracking=True)
+    ], default='pending', required=True, tracking=True)
+    confirm_token = fields.Char(copy=False, default=lambda self: secrets.token_urlsafe(16))
+    confirm_date = fields.Datetime(string="Confirmed On", copy=False, readonly=True)
     min_return_date = fields.Date(string="Earliest Return",
                                   compute='_compute_min_return_date', store=True, readonly=False)
     contact_ids = fields.Many2many('res.partner', 'matsafe_report_contact_rel',
@@ -31,21 +36,33 @@ class MatsafeReport(models.Model):
     cluster_id = fields.Many2one('matsafe.cluster', string="Cluster", index=True)
     cleared_by = fields.Many2one('res.users', string="Cleared By")
 
-    @api.depends('date', 'report_type')
+    @api.depends('confirm_date', 'report_type')
     def _compute_min_return_date(self):
+        # Counted from confirmation; empty while the report is still pending
         for report in self:
-            if report.date:
+            if report.confirm_date:
                 days = RETURN_DAYS.get(report.report_type, 3)
-                report.min_return_date = (report.date + timedelta(days=days)).date()
+                report.min_return_date = (report.confirm_date + timedelta(days=days)).date()
             else:
                 report.min_return_date = False
 
     @api.model_create_multi
     def create(self, vals_list):
-        reports = super().create(vals_list)
-        # Every new report starts the automatic chain
-        reports.action_trace()
-        return reports
+        # One active (pending or open) report per member, also within the same batch
+        member_ids = [vals.get('member_id') for vals in vals_list if vals.get('member_id')]
+        if len(member_ids) != len(set(member_ids)) or self.search_count([
+            ('member_id', 'in', member_ids), ('state', 'in', ('pending', 'open')),
+        ]):
+            raise UserError("This member already has an open report.")
+        # The chain no longer runs here: it waits for action_confirm()
+        return super().create(vals_list)
+
+    def action_confirm(self):
+        """Email confirmation: pending -> open, then run the chain. A second call does nothing."""
+        to_confirm = self.filtered(lambda r: r.state == 'pending')
+        to_confirm.write({'state': 'open', 'confirm_date': fields.Datetime.now()})
+        to_confirm.action_trace()
+        return True
 
     # ------------------------------------------------------------------
     # The automatic chain
@@ -55,8 +72,9 @@ class MatsafeReport(models.Model):
             member = report.member_id
             ref_date = report.date or fields.Datetime.now()
 
-            # min_return_date by report_type (also kept up to date by the compute)
-            report.min_return_date = (ref_date + timedelta(days=RETURN_DAYS.get(report.report_type, 3))).date()
+            # min_return_date by report_type, counted from confirmation (also kept by the compute)
+            start = report.confirm_date or fields.Datetime.now()
+            report.min_return_date = (start + timedelta(days=RETURN_DAYS.get(report.report_type, 3))).date()
 
             # 1. Pairings with the member in the last 10 days -> contacts
             pairings = report._recent_pairings(member, ref_date - timedelta(days=10))
