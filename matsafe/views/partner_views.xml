@@ -17,6 +17,12 @@
                                    decoration-danger="member_state == 'blocked'"
                                    decoration-warning="member_state == 'frozen'"/>
                             <field name="open_report_id" invisible="not open_report_id"/>
+                            <field name="rtp_stage" string="Return to play" invisible="not rtp_stage"
+                                   widget="badge"
+                                   decoration-danger="rtp_stage == 'no_sparring'"
+                                   decoration-warning="rtp_stage == 'drilling'"
+                                   decoration-info="rtp_stage == 'light_sparring'"
+                                   decoration-success="rtp_stage == 'full'"/>
                             <field name="matsafe_currency_id" invisible="1"/>
                             <field name="monthly_fee" invisible="not is_member"/>
                         </group>
@@ -52,6 +58,7 @@
                        decoration-success="member_state == 'active'"
                        decoration-danger="member_state == 'blocked'"
                        decoration-warning="member_state == 'frozen'"/>
+                <field name="rtp_stage" string="Return to play" optional="show" widget="badge" decoration-danger="rtp_stage == 'no_sparring'" decoration-warning="rtp_stage == 'drilling'" decoration-info="rtp_stage == 'light_sparring'" decoration-success="rtp_stage == 'full'"/>
                 <field name="open_report_id" optional="show"/>
             </list>
         </field>
@@ -69,6 +76,7 @@
                 <filter string="Members" name="filter_members" domain="[('is_member', '=', True)]"/>
                 <filter string="Blocked" name="filter_blocked" domain="[('member_state', '=', 'blocked')]"/>
                 <filter string="Frozen" name="filter_frozen" domain="[('member_state', '=', 'frozen')]"/>
+                <filter string="Return to play" name="filter_rtp" domain="[('rtp_stage', '!=', False)]"/>
                 <filter string="Member State" name="group_member_state" context="{'group_by': 'member_state'}"/>
             </xpath>
         </field>

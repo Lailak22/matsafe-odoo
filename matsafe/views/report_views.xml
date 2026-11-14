@@ -31,6 +31,9 @@
                             class="btn-primary" groups="matsafe.group_head_coach"
                             invisible="state != 'open'"
                             confirm="Clear this member to return to the mats?"/>
+                    <button name="action_rtp_next" type="object" string="Next return-to-play stage"
+                            groups="matsafe.group_head_coach"
+                            invisible="state != 'open' or report_type not in ('injury', 'head')"/>
                     <field name="state" widget="statusbar" statusbar_visible="pending,open,cleared"/>
                 </header>
                 <sheet>
@@ -45,6 +48,12 @@
                             <field name="report_type" readonly="id"/>
                             <field name="date" readonly="id"/>
                             <field name="min_return_date"/>
+                        </group>
+                        <group invisible="report_type not in ('injury', 'head')">
+                            <div class="text-muted" colspan="2">
+                                Return to play: No Sparring → Drilling → Light Sparring → Full.
+                                The member's current stage is on their MatSafe tab.
+                            </div>
                         </group>
                         <group>
                             <field name="cluster_id" readonly="1"/>
