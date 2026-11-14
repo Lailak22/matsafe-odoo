@@ -4,8 +4,8 @@
 
     <!-- ================= MEMBERS ================= -->
     <record id="member_omar" model="res.partner">
-        <field name="name">Laila</field>
-        <field name="email">laila@example.com</field>
+        <field name="name">Laila Elsayed</field>
+        <field name="email">laila.elsayed@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M001</field>
         <field name="face_label">Laila</field>
@@ -15,8 +15,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_saif" model="res.partner">
-        <field name="name">Hoor</field>
-        <field name="email">hoor@example.com</field>
+        <field name="name">Hoor Shujaat</field>
+        <field name="email">hoor.shujaat@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M002</field>
         <field name="face_label">Hoor</field>
@@ -26,8 +26,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_ahmed" model="res.partner">
-        <field name="name">Shahd</field>
-        <field name="email">shahd@example.com</field>
+        <field name="name">Shahd Elwardany</field>
+        <field name="email">shahd.elwardany@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M003</field>
         <field name="face_label">Shahd</field>
@@ -37,8 +37,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_faisal" model="res.partner">
-        <field name="name">Kdj</field>
-        <field name="email">kdj@example.com</field>
+        <field name="name">Khadejeh Alhadhoud</field>
+        <field name="email">khadejeh.alhadhoud@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M004</field>
         <field name="face_label">Kdj</field>
