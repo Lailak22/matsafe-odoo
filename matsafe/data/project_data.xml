@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- The models search this project by name "Mat Cleaning" -->
+        <record id="project_mat_cleaning" model="project.project">
+            <field name="name">Mat Cleaning</field>
+        </record>
+
+        <record id="task_stage_todo" model="project.task.type">
+            <field name="name">To do</field>
+            <field name="sequence">1</field>
+            <field name="project_ids" eval="[(4, ref('project_mat_cleaning'))]"/>
+        </record>
+        <record id="task_stage_cleaning" model="project.task.type">
+            <field name="name">Cleaning</field>
+            <field name="sequence">2</field>
+            <field name="project_ids" eval="[(4, ref('project_mat_cleaning'))]"/>
+        </record>
+        <record id="task_stage_done" model="project.task.type">
+            <field name="name">Done</field>
+            <field name="sequence">3</field>
+            <field name="fold" eval="True"/>
+            <field name="project_ids" eval="[(4, ref('project_mat_cleaning'))]"/>
+        </record>
+    </data>
+
+    <!-- Settings > Cleaning Tasks -->
+    <record id="action_matsafe_cleaning_tasks" model="ir.actions.act_window">
+        <field name="name">Mat Cleaning Tasks</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('project_id.name', '=', 'Mat Cleaning')]</field>
+        <field name="context" eval="{'default_project_id': ref('project_mat_cleaning')}"/>
+    </record>
+    <!-- Projects created by the website form (Hoor). Filtered by name so we don't create duplicates. -->
+    <record id="action_matsafe_coach_inbox" model="ir.actions.act_window">
+        <field name="name">Coach Inbox</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('project_id.name', '=', 'Coach Inbox')]</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No unsafe-partner reports yet.</p></field>
+    </record>
+    <record id="action_matsafe_facility_issues" model="ir.actions.act_window">
+        <field name="name">Facility Issues</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('project_id.name', '=', 'Facility Issues')]</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No facility issues reported. Photos attached to a task show on its card.</p></field>
+    </record>
+</odoo>

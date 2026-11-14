@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reports per week by type -->
+    <record id="view_matsafe_report_graph" model="ir.ui.view">
+        <field name="name">matsafe.report.graph</field>
+        <field name="model">matsafe.report</field>
+        <field name="arch" type="xml">
+            <graph string="Reports per Week" type="bar" stacked="1">
+                <field name="date" interval="week"/>
+                <field name="report_type"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_matsafe_report_pivot" model="ir.ui.view">
+        <field name="name">matsafe.report.pivot</field>
+        <field name="model">matsafe.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Reports per Week">
+                <field name="date" interval="week" type="row"/>
+                <field name="report_type" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Check-ins: allowed vs blocked per day -->
+    <record id="view_matsafe_checkin_graph" model="ir.ui.view">
+        <field name="name">matsafe.checkin.graph</field>
+        <field name="model">matsafe.checkin</field>
+        <field name="arch" type="xml">
+            <graph string="Check-ins per Day" type="bar" stacked="1">
+                <field name="datetime" interval="day"/>
+                <field name="result"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_matsafe_checkin_pivot" model="ir.ui.view">
+        <field name="name">matsafe.checkin.pivot</field>
+        <field name="model">matsafe.checkin</field>
+        <field name="arch" type="xml">
+            <pivot string="Check-ins per Day">
+                <field name="datetime" interval="day" type="row"/>
+                <field name="result" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Gear by state -->
+    <record id="view_matsafe_gear_graph" model="ir.ui.view">
+        <field name="name">matsafe.gear.graph</field>
+        <field name="model">matsafe.gear</field>
+        <field name="arch" type="xml">
+            <graph string="Gear by State" type="pie">
+                <field name="state"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_matsafe_gear_pivot" model="ir.ui.view">
+        <field name="name">matsafe.gear.pivot</field>
+        <field name="model">matsafe.gear</field>
+        <field name="arch" type="xml">
+            <pivot string="Gear by State">
+                <field name="state" type="row"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Members by state (shows "members frozen/blocked" for the owner) -->
+    <record id="view_partner_member_graph" model="ir.ui.view">
+        <field name="name">res.partner.graph.matsafe</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <graph string="Members by State" type="pie">
+                <field name="member_state"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Dashboard actions -->
+    <record id="action_matsafe_dashboard" model="ir.actions.act_window">
+        <field name="name">Reports per Week</field>
+        <field name="res_model">matsafe.report</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+        <field name="view_id" ref="view_matsafe_report_graph"/>
+    </record>
+
+    <record id="action_matsafe_dashboard_checkin" model="ir.actions.act_window">
+        <field name="name">Check-ins per Day</field>
+        <field name="res_model">matsafe.checkin</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_matsafe_checkin_graph"/>
+    </record>
+
+    <record id="action_matsafe_dashboard_gear" model="ir.actions.act_window">
+        <field name="name">Gear by State</field>
+        <field name="res_model">matsafe.gear</field>
+        <field name="view_mode">graph,pivot,kanban,list</field>
+        <field name="view_id" ref="view_matsafe_gear_graph"/>
+    </record>
+
+    <record id="action_matsafe_dashboard_members" model="ir.actions.act_window">
+        <field name="name">Members by State</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">graph,list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('view_partner_member_graph')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_partner_member_list')}),
+            (0, 0, {'view_mode': 'form'})]"/>
+        <field name="domain">[('is_member', '=', True)]</field>
+    </record>
+</odoo>

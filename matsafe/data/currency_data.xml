@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Membership fees are in AED: make sure the currency is active -->
+    <record id="base.AED" model="res.currency">
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

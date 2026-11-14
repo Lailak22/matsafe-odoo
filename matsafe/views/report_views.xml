@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_matsafe_report_list" model="ir.ui.view">
+        <field name="name">matsafe.report.list</field>
+        <field name="model">matsafe.report</field>
+        <field name="arch" type="xml">
+            <list string="Reports"
+                  decoration-warning="state == 'pending'"
+                  decoration-danger="state == 'open'"
+                  decoration-success="state == 'cleared'">
+                <field name="date"/>
+                <field name="member_id"/>
+                <field name="report_type"/>
+                <field name="min_return_date"/>
+                <field name="cluster_id" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state == 'pending'"
+                       decoration-danger="state == 'open'"
+                       decoration-success="state == 'cleared'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_matsafe_report_form" model="ir.ui.view">
+        <field name="name">matsafe.report.form</field>
+        <field name="model">matsafe.report</field>
+        <field name="arch" type="xml">
+            <form string="Report">
+                <header>
+                    <button name="action_clear" type="object" string="Clear to return"
+                            class="btn-primary" groups="matsafe.group_head_coach"
+                            invisible="state != 'open'"
+                            confirm="Clear this member to return to the mats?"/>
+                    <button name="action_rtp_next" type="object" string="Next return-to-play stage"
+                            groups="matsafe.group_head_coach"
+                            invisible="state != 'open' or report_type not in ('injury', 'head')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,open,cleared"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-danger" role="alert" invisible="not cluster_id">
+                        This report is part of an active outbreak cluster.
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="member_id" readonly="id"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="report_type" readonly="id"/>
+                            <field name="date" readonly="id"/>
+                            <field name="min_return_date"/>
+                        </group>
+                        <group invisible="report_type not in ('injury', 'head')">
+                            <div class="text-muted" colspan="2">
+                                Return to play: No Sparring → Drilling → Light Sparring → Full.
+                                The member's current stage is on their MatSafe tab.
+                            </div>
+                        </group>
+                        <group>
+                            <field name="cluster_id" readonly="1"/>
+                            <field name="cleared_by" readonly="1" invisible="state != 'cleared'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Traced Contacts" name="contacts">
+                            <field name="contact_ids" readonly="1">
+                                <list>
+                                    <field name="member_code"/>
+                                    <field name="name"/>
+                                    <field name="member_state" widget="badge"
+                                           decoration-success="member_state == 'active'"
+                                           decoration-danger="member_state == 'blocked'"
+                                           decoration-warning="member_state == 'frozen'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Description" name="description" groups="matsafe.group_head_coach">
+                            <field name="description" placeholder="Private: only head coaches can read this."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_matsafe_report_search" model="ir.ui.view">
+        <field name="name">matsafe.report.search</field>
+        <field name="model">matsafe.report</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="member_id"/>
+                <filter string="Open" name="open" domain="[('state', '=', 'open')]"/>
+                <filter string="Cleared" name="cleared" domain="[('state', '=', 'cleared')]"/>
+                <separator/>
+                <filter string="Type" name="group_type" context="{'group_by': 'report_type'}"/>
+                <filter string="Week" name="group_week" context="{'group_by': 'date:week'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_matsafe_report" model="ir.actions.act_window">
+        <field name="name">Reports</field>
+        <field name="res_model">matsafe.report</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No reports yet. Members report at /matsafe/report</p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Kanban buttons call these server actions (no Python needed) -->
+    <record id="action_gear_check_out" model="ir.actions.server">
+        <field name="name">Gear: Check out</field>
+        <field name="model_id" ref="model_matsafe_gear"/>
+        <field name="state">code</field>
+        <field name="code">records.write({'state': 'in_use'})</field>
+    </record>
+
+    <record id="action_gear_return" model="ir.actions.server">
+        <field name="name">Gear: Return (to laundry)</field>
+        <field name="model_id" ref="model_matsafe_gear"/>
+        <field name="state">code</field>
+        <field name="code">records.write({'state': 'laundry', 'member_id': False})</field>
+    </record>
+
+    <record id="action_gear_washed" model="ir.actions.server">
+        <field name="name">Gear: Washed</field>
+        <field name="model_id" ref="model_matsafe_gear"/>
+        <field name="state">code</field>
+        <field name="code">records.write({'state': 'clean', 'member_id': False})</field>
+    </record>
+
+    <record id="view_matsafe_gear_kanban" model="ir.ui.view">
+        <field name="name">matsafe.gear.kanban</field>
+        <field name="model">matsafe.gear</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" quick_create="false" group_create="false"
+                    group_delete="false" records_draggable="true">
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <field name="name" class="fw-bold fs-5"/>
+                        <field name="member_id" widget="many2one_avatar"/>
+                        <field name="lot_id"/>
+                        <div class="text-muted small">
+                            Since <field name="last_change" widget="remaining_days"/>
+                        </div>
+                        <footer>
+                            <button t-if="record.state.raw_value == 'clean'"
+                                    name="%(action_gear_check_out)d" type="action"
+                                    class="btn btn-sm btn-primary">Check out</button>
+                            <button t-if="record.state.raw_value == 'in_use'"
+                                    name="%(action_gear_return)d" type="action"
+                                    class="btn btn-sm btn-warning">Return</button>
+                            <button t-if="record.state.raw_value in ['laundry', 'blocked']"
+                                    name="%(action_gear_washed)d" type="action"
+                                    class="btn btn-sm btn-success">Washed</button>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_matsafe_gear_list" model="ir.ui.view">
+        <field name="name">matsafe.gear.list</field>
+        <field name="model">matsafe.gear</field>
+        <field name="arch" type="xml">
+            <list string="Gear" decoration-danger="state == 'blocked'" decoration-warning="state == 'laundry'">
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="lot_id" optional="hide"/>
+                <field name="last_change"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'clean'"
+                       decoration-info="state == 'in_use'"
+                       decoration-warning="state == 'laundry'"
+                       decoration-danger="state == 'blocked'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_matsafe_gear_form" model="ir.ui.view">
+        <field name="name">matsafe.gear.form</field>
+        <field name="model">matsafe.gear</field>
+        <field name="arch" type="xml">
+            <form string="Gear">
+                <header>
+                    <button name="%(action_gear_check_out)d" type="action" string="Check out"
+                            class="btn-primary" invisible="state != 'clean'"/>
+                    <button name="%(action_gear_return)d" type="action" string="Return"
+                            invisible="state != 'in_use'"/>
+                    <button name="%(action_gear_washed)d" type="action" string="Washed"
+                            invisible="state not in ('laundry', 'blocked')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Gloves 14oz #3"/></h1>
+                    </div>
+                    <group>
+                        <field name="member_id" domain="[('is_member', '=', True)]"/>
+                        <field name="lot_id"/>
+                        <field name="last_change" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_matsafe_gear" model="ir.actions.act_window">
+        <field name="name">Gear</field>
+        <field name="res_model">matsafe.gear</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add your rental gloves and gis</p>
+        </field>
+    </record>
+</odoo>

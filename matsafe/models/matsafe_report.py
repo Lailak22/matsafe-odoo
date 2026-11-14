@@ -53,13 +53,20 @@ class MatsafeReport(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        # One active (pending or open) report per member, also within the same batch
-        member_ids = [vals.get('member_id') for vals in vals_list if vals.get('member_id')]
-        if len(member_ids) != len(set(member_ids)) or self.search_count([
-            ('member_id', 'in', member_ids), ('state', 'in', ('pending', 'open')),
-        ]):
+        # One OPEN report per member and type; also no two of the same in one batch
+        keys = [(vals.get('member_id'), vals.get('report_type') or 'other') for vals in vals_list]
+        if len(keys) != len(set(keys)):
             raise UserError("This member already has an open report.")
-        # The chain no longer runs here: it waits for action_confirm()
+        for member_id, report_type in keys:
+            if not member_id:
+                continue
+            same_type = self.search([('member_id', '=', member_id), ('report_type', '=', report_type),
+                                     ('state', 'in', ('pending', 'open'))])
+            if same_type.filtered(lambda r: r.state == 'open'):
+                raise UserError("This member already has an open report.")
+            # An older unconfirmed report of the same type is replaced by the new one
+            same_type.unlink()
+        # The chain does not run here: it waits for action_confirm()
         return super().create(vals_list)
 
     def action_confirm(self):
@@ -97,10 +104,12 @@ class MatsafeReport(models.Model):
 
             # --- Contagious types: skin and viral ---
             # 1. Contacts: training partners (skin) or everyone in the same sessions (viral)
-            pairings = report._recent_pairings(member, since)
+            pairings = report._recent_pairings(member, since, ref_date)
             sessions = pairings.session_id | self.env['matsafe.session'].search([
                 ('attendee_ids', 'in', member.ids),
                 ('start', '>=', since),
+                ('start', '<=', ref_date),  # future classes are not exposure
+                ('state', 'in', ('running', 'done')),  # draft classes are not exposure
             ])
             contacts = pairings.member_a_id | pairings.member_b_id
             if rtype == 'viral':
@@ -126,10 +135,12 @@ class MatsafeReport(models.Model):
             report._check_cluster(ref_date)
         return True
 
-    def _recent_pairings(self, member, since):
-        """Pairings where the member is on either side, since the given date."""
+    def _recent_pairings(self, member, since, until):
+        """Pairings where the member is on either side, between since and until."""
         return self.env['matsafe.pairing'].search([
             ('date', '>=', since),
+            ('date', '<=', until),  # future classes are not exposure
+            ('session_id.state', 'in', ('running', 'done')),  # draft classes are not exposure
             '|', ('member_a_id', '=', member.id), ('member_b_id', '=', member.id),
         ])
 
@@ -187,13 +198,15 @@ class MatsafeReport(models.Model):
         # Sessions the reporters shared (paired together or both attended)
         shared = self.env['matsafe.session']
         for other in others:
-            pairs = self._recent_pairings(self.member_id, ref_date - timedelta(days=10)).filtered(
+            pairs = self._recent_pairings(self.member_id, ref_date - timedelta(days=10), ref_date).filtered(
                 lambda p: other.member_id in (p.member_a_id | p.member_b_id))
             shared |= pairs.session_id
             shared |= self.env['matsafe.session'].search([
                 ('attendee_ids', 'in', self.member_id.ids),
                 ('attendee_ids', 'in', other.member_id.ids),
                 ('start', '>=', ref_date - timedelta(days=10)),
+                ('start', '<=', ref_date),
+                ('state', 'in', ('running', 'done')),
             ])
         cluster.session_ids = [(4, s.id) for s in shared]
 
@@ -212,9 +225,23 @@ class MatsafeReport(models.Model):
         for report in self:
             report.write({'state': 'cleared', 'cleared_by': self.env.user.id})
             member = report.member_id
-            member.write({'member_state': 'active', 'open_report_id': False, 'rtp_stage': False})
-            member.message_post(body="MatSafe: report cleared by %s, member is active again."
-                                % self.env.user.name, subtype_xmlid='mail.mt_note')
+            # The member's other reports that are still open
+            remaining = self.search([('member_id', '=', member.id), ('state', '=', 'open')])
+            blocking = remaining.filtered(lambda r: r.report_type in ('skin', 'viral'))
+            vals = {
+                # Still blocked while a skin/viral report is open
+                'member_state': 'blocked' if blocking else 'active',
+                # Point to the remaining open report (blocking first), else empty
+                'open_report_id': (blocking or remaining)[:1].id,
+            }
+            # Keep the return-to-play stage while an injury/head report is still open
+            if not remaining.filtered(lambda r: r.report_type in ('injury', 'head')):
+                vals['rtp_stage'] = False
+            member.write(vals)
+            status = ("still blocked by another open report" if blocking
+                      else "member is active again")
+            member.message_post(body="MatSafe: report cleared by %s, %s."
+                                % (self.env.user.name, status), subtype_xmlid='mail.mt_note')
         return True
 
     def action_rtp_next(self):
