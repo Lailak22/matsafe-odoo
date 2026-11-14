@@ -32,4 +32,19 @@
         <field name="domain">[('project_id.name', '=', 'Mat Cleaning')]</field>
         <field name="context" eval="{'default_project_id': ref('project_mat_cleaning')}"/>
     </record>
+    <!-- Projects created by the website form (Hoor). Filtered by name so we don't create duplicates. -->
+    <record id="action_matsafe_coach_inbox" model="ir.actions.act_window">
+        <field name="name">Coach Inbox</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('project_id.name', '=', 'Coach Inbox')]</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No unsafe-partner reports yet.</p></field>
+    </record>
+    <record id="action_matsafe_facility_issues" model="ir.actions.act_window">
+        <field name="name">Facility Issues</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('project_id.name', '=', 'Facility Issues')]</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No facility issues reported. Photos attached to a task show on its card.</p></field>
+    </record>
 </odoo>

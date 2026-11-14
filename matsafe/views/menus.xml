@@ -27,6 +27,13 @@
     <menuitem id="menu_matsafe_gear" name="Gear" parent="menu_matsafe_root"
               action="action_matsafe_gear" sequence="70"/>
 
+    <!-- Inbox: tasks created by the website form -->
+    <menuitem id="menu_matsafe_inbox" name="Inbox" parent="menu_matsafe_root" sequence="45"/>
+    <menuitem id="menu_matsafe_coach_inbox" name="Coach Inbox" parent="menu_matsafe_inbox"
+              action="action_matsafe_coach_inbox" sequence="1" groups="matsafe.group_head_coach"/>
+    <menuitem id="menu_matsafe_facility_issues" name="Facility Issues" parent="menu_matsafe_inbox"
+              action="action_matsafe_facility_issues" sequence="2"/>
+
     <!-- Settings -->
     <menuitem id="menu_matsafe_settings" name="Settings" parent="menu_matsafe_root" sequence="90"
               groups="matsafe.group_head_coach"/>
