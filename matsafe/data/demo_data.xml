@@ -51,8 +51,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_yousef" model="res.partner">
-        <field name="name">Mariam Al Ketbi</field>
-        <field name="email">mariam.ketbi@example.com</field>
+        <field name="name">Yousef Al Ketbi</field>
+        <field name="email">yousef.ketbi@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M005</field>
         <field name="weight_kg" eval="76"/>
@@ -61,8 +61,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_majid" model="res.partner">
-        <field name="name">Noura Al Shamsi</field>
-        <field name="email">noura.shamsi@example.com</field>
+        <field name="name">Majid Al Shamsi</field>
+        <field name="email">majid.shamsi@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M006</field>
         <field name="weight_kg" eval="61"/>
@@ -71,8 +71,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_hamdan" model="res.partner">
-        <field name="name">Fatima Al Falasi</field>
-        <field name="email">fatima.falasi@example.com</field>
+        <field name="name">Hamdan Al Falasi</field>
+        <field name="email">hamdan.falasi@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M007</field>
         <field name="weight_kg" eval="85"/>
@@ -81,8 +81,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_nasser" model="res.partner">
-        <field name="name">Aisha Al Suwaidi</field>
-        <field name="email">aisha.suwaidi@example.com</field>
+        <field name="name">Nasser Al Suwaidi</field>
+        <field name="email">nasser.suwaidi@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M008</field>
         <field name="weight_kg" eval="52"/>
@@ -91,8 +91,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_rashid" model="res.partner">
-        <field name="name">Hessa Al Mazrouei</field>
-        <field name="email">hessa.mazrouei@example.com</field>
+        <field name="name">Rashid Al Mazrouei</field>
+        <field name="email">rashid.mazrouei@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M009</field>
         <field name="weight_kg" eval="79"/>
@@ -101,8 +101,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_khalid" model="res.partner">
-        <field name="name">Shamma Al Dhaheri</field>
-        <field name="email">shamma.dhaheri@example.com</field>
+        <field name="name">Khalid Al Dhaheri</field>
+        <field name="email">khalid.dhaheri@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M010</field>
         <field name="weight_kg" eval="88"/>
@@ -111,8 +111,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_ali" model="res.partner">
-        <field name="name">Maitha Al Marzooqi</field>
-        <field name="email">maitha.marzooqi@example.com</field>
+        <field name="name">Ali Al Marzooqi</field>
+        <field name="email">ali.marzooqi@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M011</field>
         <field name="weight_kg" eval="64"/>
@@ -121,8 +121,8 @@
         <field name="monthly_fee" eval="600"/>
     </record>
     <record id="member_saeed" model="res.partner">
-        <field name="name">Latifa Al Qubaisi</field>
-        <field name="email">latifa.qubaisi@example.com</field>
+        <field name="name">Saeed Al Qubaisi</field>
+        <field name="email">saeed.qubaisi@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M012</field>
         <field name="weight_kg" eval="95"/>
@@ -556,7 +556,7 @@
         <field name="result">allowed</field>
     </record>
 
-    <!-- ================= SHAMMA (member_khalid): regular who stopped coming (absence demo) ================= -->
+    <!-- ================= KHALID: regular who stopped coming (absence demo) ================= -->
     <record id="checkin_khalid_9" model="matsafe.checkin">
         <field name="member_id" ref="member_khalid"/>
         <field name="datetime" eval="(DateTime.today() - relativedelta(days=9)).strftime('%Y-%m-%d 14:50:00')"/>
