@@ -7,8 +7,8 @@
     const METADATA_URL = '/matsafe/static/model/metadata.json'; // added by Person D
     const CHECKIN_URL = '/matsafe/checkin';
     const PREDICT_EVERY_MS = 500;  // one prediction every 500 ms
-    const MIN_PROBABILITY = 0.90;  // the top class must be above this...
-    const HOLD_MS = 1500;          // ...for 1.5 seconds in a row
+    const MIN_PROBABILITY = 0.80;  // the top class must be above this...
+    const HOLD_MS = 1000;          // ...for 1 second in a row
     const RESULT_MS = 3000;        // the green / red screen stays 3 seconds
     const IGNORE_MS = 10000;       // the same face is ignored for 10 seconds after a result
     const NOBODY = 'nobody';       // class name that means "no one at the camera"
@@ -24,6 +24,15 @@
     const codeForm = document.getElementById('ms-code-form');
     const codeInput = document.getElementById('ms-code-input');
 
+    // Debug line at the bottom of the page: live top class + probability, or a load error.
+    // Made here (not in the template) so only this file changes.
+    const debugEl = document.createElement('div');
+    debugEl.id = 'ms-debug';
+    // Normal page flow, below the member code box (so it never covers the input)
+    debugEl.style.cssText = 'padding:4px 12px;min-height:1.4em;' +
+        'font:400 14px/1.4 ui-monospace,Menlo,Consolas,monospace;color:#9ca3af;background:#000;';
+    document.body.appendChild(debugEl);
+
     // ---- State ----------------------------------------------------------
     let model = null;
     let modelPromise = null;  // the model is downloaded once, even if loadModel() is called again
@@ -36,6 +45,18 @@
 
     function setStatus(text) {
         statusEl.textContent = text;
+    }
+
+    function setDebug(text, isError) {
+        debugEl.textContent = text;  // textContent: never read as HTML
+        debugEl.style.color = isError ? '#fca5a5' : '#9ca3af';
+    }
+
+    // Show a load error on screen (status + debug line), not only in the console
+    function showLoadError(what, error) {
+        console.warn('MatSafe: ' + what, error);
+        const detail = error ? ((error.name ? error.name + ': ' : '') + (error.message || error)) : 'unknown error';
+        setDebug(what + ' - ' + detail, true);
     }
 
     // ---- Result screen --------------------------------------------------
@@ -99,14 +120,14 @@
             return;
         }
         if (label !== streakLabel) {
-            // A new face: start counting the 1.5 seconds
+            // A new face: start counting the 1 second
             streakLabel = label;
             streakStart = now;
             setStatus('Hold still...');
             return;
         }
         if (now - streakStart >= HOLD_MS) {
-            // The same face for 1.5 seconds in a row: check in
+            // The same face for 1 second in a row: check in
             streakLabel = null;
             setStatus(SCAN_TEXT);
             checkIn({face_label: label});
@@ -142,6 +163,7 @@
                     top = prediction;
                 }
             }
+            setDebug(top.className + ' ' + Math.round(top.probability * 100) + '%');
             onPrediction(top.className, top.probability);
         } catch (error) {
             console.warn('MatSafe: prediction failed', error);
@@ -188,7 +210,7 @@
             model = await loadModel();
             await warmUp();
         } catch (error) {
-            console.warn('MatSafe: face model not loaded', error);
+            showLoadError('Face model not loaded', error);
             setStatus('Face model not loaded, use member code');
             return;
         }
@@ -198,7 +220,7 @@
             await webcam.setup();
             await webcam.play();
         } catch (error) {
-            console.warn('MatSafe: camera not available', error);
+            showLoadError('Camera not available', error);
             setStatus('Camera not available, use member code');
             return;
         }
