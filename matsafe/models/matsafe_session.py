@@ -82,6 +82,12 @@ class MatsafeSession(models.Model):
             session.cleaning_task_id = task
         return True
 
+    def action_open_pair_cam(self):
+        self.ensure_one()
+        return {'type': 'ir.actions.act_url',
+                'url': '/matsafe/pair-cam?session_id=%s' % self.id,
+                'target': 'new'}
+
     def _get_cleaning_project(self):
         # sudo: coaches may not have Project rights
         Project = self.env['project.project'].sudo()
