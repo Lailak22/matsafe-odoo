@@ -1,145 +1,565 @@
-/* MatSafe door kiosk: dark full-screen page with large bold text */
+/* MatSafe door kiosk (/matsafe/kiosk) and pairing camera (/matsafe/pair-cam).
+   Same brand as the report form (report.css): warm off-white, near-black ink, ONE mat red,
+   Oswald condensed uppercase headings, flat 2px+ borders, no gradients, no glows.
+   Sized to be read from 2 metres away: everything scales with the screen height. */
+
+/* ---- Fonts: bundled with Odoo (web module), so no CDN and they work offline ---- */
+@font-face {
+    font-family: "MatSafe Display";
+    src: url("/web/static/fonts/google/Oswald/Oswald-SemiBold.ttf") format("truetype");
+    font-weight: 500 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MatSafe Display";
+    src: url("/web/static/fonts/google/Oswald/Oswald-Bold.ttf") format("truetype");
+    font-weight: 700 900;
+    font-display: swap;
+}
+
+:root {
+    --ms-bg: #f4f1ea;          /* warm off-white */
+    --ms-band: #e9e4d9;        /* the code box band at the bottom */
+    --ms-paper: #ffffff;
+    --ms-ink: #111111;
+    --ms-muted: #5c574f;       /* 6:1 on the background */
+    --ms-red: #d7261e;         /* mat red: the only accent */
+    --ms-green: #1e8e3e;       /* the "allowed" screen only */
+    --ms-display: "MatSafe Display", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --ms-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
 
 * {
     box-sizing: border-box;
 }
 
-/* The "hidden" attribute must win over display:flex below */
+/* The "hidden" attribute must win over the display rules below */
 [hidden] {
     display: none !important;
 }
 
 html,
 body {
-    height: 100%;
     margin: 0;
+    min-height: 100%;
 }
 
 body {
     display: flex;
     flex-direction: column;
-    background: #0b0f14;
-    color: #ffffff;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    font-weight: 700;
+    min-height: 100vh;
+    background: var(--ms-bg);
+    color: var(--ms-ink);
+    font-family: var(--ms-body);
     text-align: center;
 }
 
-/* Logo text at the top */
+/* ---- Mat tape: one red and black stripe across the top ---- */
+.ms-tape {
+    flex: 0 0 auto;
+    height: 10px;
+    background: repeating-linear-gradient(90deg,
+        var(--ms-red) 0 64px, var(--ms-ink) 64px 76px);
+}
+
+/* ---- Top: MATSAFE wordmark with its red tape line, and the screen's label ---- */
+.ms-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    padding: 2.6vh 4vw 0;
+}
+
 .ms-logo {
-    padding: 20px 16px 8px;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 900;
-    letter-spacing: 0.02em;
+    position: relative;
+    padding-bottom: 0.14em;
+    font-family: var(--ms-display);
+    font-size: clamp(2.4rem, 6.5vh, 5rem);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
 }
 
-.ms-logo span {
-    color: #22c55e;
+.ms-logo::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 0.09em;
+    min-height: 4px;
+    background: var(--ms-red);
 }
 
-/* Middle: webcam picture + status line */
+.ms-screen-label {
+    padding: 0.35em 0.8em;
+    border: 3px solid var(--ms-ink);
+    border-radius: 4px;
+    font-family: var(--ms-display);
+    font-size: clamp(1rem, 2.4vh, 1.7rem);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ---- Middle: camera frame + the big instruction ---- */
 .ms-main {
-    flex: 1;
+    flex: 1 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    padding: 16px;
-    min-height: 0;
+    gap: 3vh;
+    padding: 3vh 4vw;
 }
 
-/* Empty until the webcam starts */
-.ms-camera:empty {
-    display: none;
+/* Thick near-black frame, square-ish corners */
+.ms-frame {
+    position: relative;
+    width: min(50vh, 82vw);
+    aspect-ratio: 1 / 1;
+    border: clamp(6px, 1vh, 10px) solid var(--ms-ink);
+    border-radius: 6px;
+    background: var(--ms-band);
+    overflow: hidden;
+}
+
+/* Pairing page: a little smaller, it has a session line and the scoreboard too */
+.ms-pair .ms-frame {
+    width: min(42vh, 72vw);
+}
+
+/* The JS puts the webcam canvas in here */
+.ms-camera {
+    position: absolute;
+    inset: 0;
 }
 
 .ms-camera canvas {
     display: block;
-    width: min(55vh, 90vw);
-    height: auto;
-    border: 4px solid #1f2937;
-    border-radius: 20px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.ms-status {
-    margin: 0;
-    font-size: clamp(1.6rem, 4.5vw, 3rem);
-    line-height: 1.2;
+/* Before the camera runs (no model, no camera): "Camera off", no SCANNING tag */
+.ms-camera:empty ~ .ms-scan-tag,
+.ms-camera:not(:empty) ~ .ms-camera-off {
+    display: none;
 }
 
-/* Small grey line (pairing page: session name, "Partner 1: ...") */
-.ms-info {
-    margin: 0;
-    min-height: 1.4em;
-    font-size: clamp(1rem, 2.5vw, 1.5rem);
-    font-weight: 600;
-    color: #9ca3af;
-}
-
-/* Bottom: small member code fallback */
-.ms-code {
+.ms-camera-off {
+    position: absolute;
+    inset: 0;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 14px 16px 20px;
-    border-top: 1px solid #1f2937;
-    font-size: 1rem;
+    gap: 1.5vh;
+    color: var(--ms-muted);
+    font-family: var(--ms-display);
+    font-size: clamp(1.1rem, 2.6vh, 1.8rem);
     font-weight: 600;
-    color: #9ca3af;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.ms-camera-off svg {
+    width: 26%;
+    height: auto;
+}
+
+/* "SCANNING" tag with a slowly pulsing red dot */
+.ms-scan-tag {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.3em 0.75em;
+    border-radius: 3px;
+    background: var(--ms-ink);
+    color: #ffffff;
+    font-family: var(--ms-display);
+    font-size: clamp(1rem, 2.2vh, 1.5rem);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.ms-dot {
+    width: 0.6em;
+    height: 0.6em;
+    border-radius: 50%;
+    background: var(--ms-red);
+    animation: ms-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ms-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
+
+/* The big instruction: "LOOK AT THE CAMERA" */
+.ms-status {
+    margin: 0;
+    max-width: 92vw;
+    font-family: var(--ms-display);
+    font-size: clamp(2.2rem, 6.5vh, 5.2rem);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+}
+
+/* A problem (no model, no camera): a calm bar, not a red screen */
+.ms-status.ms-status-warn {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    max-width: min(900px, 92vw);
+    padding: 0.7em 1.1em;
+    background: var(--ms-paper);
+    border: 2px solid var(--ms-ink);
+    border-left: 10px solid var(--ms-ink);
+    border-radius: 4px;
+    font-family: var(--ms-body);
+    font-size: clamp(1.15rem, 2.8vh, 1.9rem);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: none;
+}
+
+/* Small "i" in a circle */
+.ms-status.ms-status-warn::before {
+    content: "i";
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5em;
+    height: 1.5em;
+    border: 2px solid var(--ms-ink);
+    border-radius: 50%;
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 700;
+}
+
+/* ---- Bottom: member code fallback, styled like the report form inputs ---- */
+.ms-code {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4vh;
+    padding: 2.6vh 4vw 3.2vh;
+    background: var(--ms-band);
+    border-top: 3px solid var(--ms-ink);
+}
+
+.ms-code label {
+    font-family: var(--ms-display);
+    font-size: clamp(1.05rem, 2.5vh, 1.7rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ms-code-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
 }
 
 .ms-code input,
 .ms-code button {
-    height: 44px;
-    padding: 0 14px;
-    border-radius: 10px;
-    font: inherit;
-    font-size: 1.1rem;
+    height: clamp(58px, 8.5vh, 88px);
+    border-radius: 4px;
+    font-family: var(--ms-display);
+    font-size: clamp(1.5rem, 4vh, 2.6rem);
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 .ms-code input {
-    width: 180px;
-    border: 2px solid #374151;
-    background: #111827;
-    color: #ffffff;
+    width: min(420px, 62vw);
+    padding: 0 0.6em;
+    background: var(--ms-paper);
+    border: 3px solid var(--ms-ink);
+    color: var(--ms-ink);
+    letter-spacing: 0.08em;
     text-align: center;
 }
 
 .ms-code input:focus {
-    outline: none;
-    border-color: #22c55e;
+    outline: 3px solid var(--ms-red);
+    outline-offset: 0;
+    border-color: var(--ms-red);
 }
 
 .ms-code button {
-    border: 0;
-    background: #22c55e;
-    color: #04130a;
-    font-weight: 800;
+    padding: 0 1.3em;
+    border: 3px solid var(--ms-ink);
+    background: var(--ms-ink);
+    color: #ffffff;
+    letter-spacing: 0.08em;
     cursor: pointer;
 }
 
-/* Result screen: covers everything for 3 seconds */
+.ms-code button:hover {
+    background: #333333;
+}
+
+.ms-code button:focus-visible {
+    outline: 3px solid var(--ms-red);
+    outline-offset: 3px;
+}
+
+/* ---- Pairing camera ---- */
+.ms-session {
+    margin: 0;
+    max-width: 92vw;
+    font-family: var(--ms-display);
+    font-size: clamp(1.7rem, 4.6vh, 3.6rem);
+    font-weight: 700;
+    line-height: 1.05;
+    text-transform: uppercase;
+}
+
+/* Scoreboard: 01 PARTNER 1 / 02 PARTNER 2, red bar under the current step */
+.ms-steps {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 3px solid var(--ms-ink);
+    border-bottom: 3px solid var(--ms-ink);
+}
+
+.ms-steps li {
+    padding: 0.45em 1.4em 0.4em;
+    font-family: var(--ms-display);
+    font-size: clamp(1.05rem, 2.6vh, 1.8rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--ms-muted);
+}
+
+.ms-steps li + li {
+    border-left: 3px solid var(--ms-ink);
+}
+
+.ms-steps b {
+    margin-right: 0.35em;
+}
+
+.ms-steps[data-at="1"] [data-step="1"],
+.ms-steps[data-at="2"] [data-step="2"] {
+    color: var(--ms-ink);
+    box-shadow: inset 0 -7px 0 var(--ms-red);
+}
+
+.ms-steps[data-at="2"] [data-step="1"] {
+    color: var(--ms-ink);
+}
+
+/* Camera in the middle, partner 1's name tag beside it */
+.ms-stage {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 2.5vw;
+    width: 100%;
+}
+
+.ms-stage .ms-frame {
+    grid-column: 2;
+}
+
+.ms-partner {
+    grid-column: 3;
+    justify-self: start;
+    margin: 0;
+    text-align: left;
+}
+
+.ms-partner:empty {
+    display: none;
+}
+
+/* Black name tag */
+.ms-partner.ms-partner-name {
+    padding: 0.35em 0.75em 0.4em;
+    border-radius: 4px;
+    background: var(--ms-ink);
+    color: #ffffff;
+    font-family: var(--ms-display);
+    font-size: clamp(1.8rem, 5vh, 3.6rem);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+}
+
+.ms-partner.ms-partner-name::before {
+    content: "Partner 1";
+    display: block;
+    margin-bottom: 0.3em;
+    padding-bottom: 0.25em;
+    border-bottom: 3px solid var(--ms-red);
+    font-size: 0.38em;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: #d9d4c9;
+}
+
+/* A short message ("No second partner in 15 seconds..."): calm bar */
+.ms-partner.ms-partner-msg {
+    max-width: 24vw;
+    padding: 0.6em 0.9em;
+    background: var(--ms-paper);
+    border: 2px solid var(--ms-ink);
+    border-left: 8px solid var(--ms-ink);
+    border-radius: 4px;
+    font-size: clamp(1rem, 2.3vh, 1.5rem);
+    font-weight: 600;
+}
+
+/* Portrait tablets: the name tag goes under the camera */
+@media (max-aspect-ratio: 1/1) {
+    .ms-stage {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 2vh;
+    }
+
+    .ms-stage .ms-frame,
+    .ms-partner {
+        grid-column: 1;
+        justify-self: center;
+    }
+
+    .ms-partner.ms-partner-msg {
+        max-width: 90vw;
+    }
+}
+
+/* ---- Result screen: covers everything for 3 seconds, readable across the room ---- */
 .ms-result {
     position: fixed;
     inset: 0;
     z-index: 10;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 5vw;
-    font-size: clamp(2.5rem, 9vw, 7rem);
-    font-weight: 900;
-    line-height: 1.1;
+    gap: 1.5vh;
+    padding: 5vh 6vw;
+    color: #ffffff;
+    font-family: var(--ms-display);
+    font-weight: 700;
+    text-transform: uppercase;
     overflow-wrap: anywhere;
 }
 
 .ms-allowed {
-    background: #15803d;
+    background: var(--ms-green);
 }
 
 .ms-blocked {
-    background: #b91c1c;
+    background: var(--ms-red);
+}
+
+.ms-saved {
+    background: var(--ms-ink);
+}
+
+.ms-result-icon {
+    display: none;
+    width: clamp(90px, 17vh, 190px);
+    height: clamp(90px, 17vh, 190px);
+    margin-bottom: 1vh;
+}
+
+.ms-allowed .ms-icon-ok,
+.ms-saved .ms-icon-ok,
+.ms-blocked .ms-icon-stop {
+    display: block;
+}
+
+/* As heavy as the headline next to it */
+.ms-icon-ok {
+    stroke-width: 3.2;
+}
+
+.ms-result-text {
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+}
+
+.ms-result-detail {
+    line-height: 1;
+}
+
+.ms-result-detail:empty {
+    display: none;
+}
+
+/* ALLOWED: "WELCOME", then the name even larger */
+.ms-allowed .ms-result-text {
+    font-size: clamp(2.6rem, 9vh, 7.5rem);
+}
+
+.ms-allowed .ms-result-detail {
+    font-size: clamp(4rem, 19vh, 16rem);
+    line-height: 0.92;
+}
+
+/* BLOCKED / NOT SAVED: the word huge, the reason below it */
+.ms-blocked .ms-result-text {
+    font-size: clamp(4rem, 19vh, 16rem);
+}
+
+.ms-blocked .ms-result-detail {
+    max-width: 90vw;
+    font-size: clamp(1.8rem, 6vh, 4.6rem);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* PAIR SAVED: black, with a small red underline */
+.ms-saved .ms-result-text {
+    font-size: clamp(2.6rem, 9vh, 7.5rem);
+}
+
+.ms-saved .ms-result-text::after {
+    content: "";
+    display: block;
+    width: 1.6em;
+    height: 0.09em;
+    margin: 0.25em auto 0.15em;
+    background: var(--ms-red);
+}
+
+.ms-saved .ms-result-detail {
+    font-size: clamp(3rem, 12vh, 10rem);
+}
+
+/* ---- People who turned animations off: the dot stays still ---- */
+@media (prefers-reduced-motion: reduce) {
+    .ms-dot {
+        animation: none;
+    }
 }

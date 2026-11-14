@@ -373,6 +373,52 @@
 </html>
     </template>
 
+    <!-- ===== Door kiosk and pairing camera: shared pieces (styles in kiosk.css) ===== -->
+
+    <!-- Mat tape, MATSAFE wordmark and the screen's label (screen_label) -->
+    <template id="ms_screen_top" name="MatSafe: Kiosk Screen Top">
+        <div class="ms-tape" aria-hidden="true"/>
+        <header class="ms-top">
+            <span class="ms-logo">MatSafe</span>
+            <span class="ms-screen-label" t-out="screen_label"/>
+        </header>
+    </template>
+
+    <!-- The webcam frame. The JS puts its canvas into #ms-camera; until then (no model,
+         no camera) the frame shows "Camera off" and no SCANNING tag. -->
+    <template id="ms_camera_frame" name="MatSafe: Kiosk Camera Frame">
+        <div class="ms-frame">
+            <div id="ms-camera" class="ms-camera"></div>
+            <span class="ms-scan-tag"><i class="ms-dot" aria-hidden="true"></i>Scanning</span>
+            <div class="ms-camera-off" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+                <span>Camera off</span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Full-screen result: the JS sets the colour class and fills the title and the detail -->
+    <template id="ms_result_screen" name="MatSafe: Kiosk Result Screen">
+        <div id="ms-result" class="ms-result" role="alert" hidden="hidden">
+            <svg class="ms-result-icon ms-icon-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="square" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <svg class="ms-result-icon ms-icon-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+                <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <div id="ms-result-text" class="ms-result-text"></div>
+            <div id="ms-result-detail" class="ms-result-detail"></div>
+        </div>
+    </template>
+
     <!-- /matsafe/kiosk : full-screen door page. Standalone HTML: no website header/footer.
          JS, CSS and the two libraries are plain static files (the libraries are local copies,
          so the kiosk works without internet). -->
@@ -384,26 +430,26 @@
         <title>MatSafe Kiosk</title>
         <link rel="stylesheet" t-attf-href="/matsafe/static/src/kiosk.css?v=#{asset_version}"/>
     </head>
-    <body>
-        <header class="ms-logo">Mat<span>Safe</span></header>
+    <body class="ms-kiosk">
+        <t t-call="matsafe.ms_screen_top">
+            <t t-set="screen_label" t-value="'Door check-in'"/>
+        </t>
 
         <main class="ms-main">
-            <!-- kiosk.js puts the webcam picture here -->
-            <div id="ms-camera" class="ms-camera"></div>
+            <t t-call="matsafe.ms_camera_frame"/>
             <p id="ms-status" class="ms-status">Starting...</p>
         </main>
 
         <!-- Fallback: type the member code -->
         <form id="ms-code-form" class="ms-code" autocomplete="off">
-            <label for="ms-code-input">Enter member code</label>
-            <input id="ms-code-input" type="text" name="member_code" autocapitalize="characters"/>
-            <button type="submit">Check in</button>
+            <label for="ms-code-input">Or enter your member code</label>
+            <div class="ms-code-row">
+                <input id="ms-code-input" type="text" name="member_code" autocapitalize="characters"/>
+                <button type="submit">Check in</button>
+            </div>
         </form>
 
-        <!-- Big green / red result screen, shown by kiosk.js -->
-        <div id="ms-result" class="ms-result" role="alert" hidden="hidden">
-            <div id="ms-result-text"></div>
-        </div>
+        <t t-call="matsafe.ms_result_screen"/>
 
         <script src="/matsafe/static/src/lib/tf.min.js"></script>
         <script src="/matsafe/static/src/lib/teachablemachine-image.min.js"></script>
@@ -423,25 +469,30 @@
         <link rel="stylesheet" t-attf-href="/matsafe/static/src/kiosk.css?v=#{asset_version}"/>
     </head>
     <!-- pair_cam.js reads the session id from here -->
-    <body t-att-data-session-id="pair_session.id or ''">
-        <header class="ms-logo">Mat<span>Safe</span></header>
+    <body class="ms-pair" t-att-data-session-id="pair_session.id or ''">
+        <t t-call="matsafe.ms_screen_top">
+            <t t-set="screen_label" t-value="'Pairing camera'"/>
+        </t>
 
         <main class="ms-main">
-            <p class="ms-info">
-                <t t-if="pair_session">Pairing for: <t t-out="pair_session.name"/></t>
+            <h1 class="ms-session">
+                <t t-if="pair_session">Pairing: <t t-out="pair_session.name"/></t>
                 <t t-else="">No session selected</t>
-            </p>
-            <!-- pair_cam.js puts the webcam picture here -->
-            <div id="ms-camera" class="ms-camera"></div>
+            </h1>
+            <!-- Scoreboard: pair_cam.js moves data-at from 1 to 2 -->
+            <ol id="ms-steps" class="ms-steps" data-at="1" aria-label="Step">
+                <li data-step="1"><b>01</b> Partner 1</li>
+                <li data-step="2"><b>02</b> Partner 2</li>
+            </ol>
+            <div class="ms-stage">
+                <t t-call="matsafe.ms_camera_frame"/>
+                <!-- Partner 1's name tag, or a short message (pair_cam.js) -->
+                <p id="ms-partner" class="ms-partner"></p>
+            </div>
             <p id="ms-status" class="ms-status">Starting...</p>
-            <!-- "Partner 1: ..." while waiting for partner 2 -->
-            <p id="ms-partner" class="ms-info"></p>
         </main>
 
-        <!-- Big green / red result screen, shown by pair_cam.js -->
-        <div id="ms-result" class="ms-result" role="alert" hidden="hidden">
-            <div id="ms-result-text"></div>
-        </div>
+        <t t-call="matsafe.ms_result_screen"/>
 
         <script src="/matsafe/static/src/lib/tf.min.js"></script>
         <script src="/matsafe/static/src/lib/teachablemachine-image.min.js"></script>

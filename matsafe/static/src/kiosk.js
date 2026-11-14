@@ -20,6 +20,7 @@
     const cameraEl = document.getElementById('ms-camera');
     const resultEl = document.getElementById('ms-result');
     const resultTextEl = document.getElementById('ms-result-text');
+    const resultDetailEl = document.getElementById('ms-result-detail');
     const codeForm = document.getElementById('ms-code-form');
     const codeInput = document.getElementById('ms-code-input');
 
@@ -31,13 +32,17 @@
     let streakStart = 0;      // when we first saw that face
     const ignoreUntil = {};   // face label -> time until which it is ignored
 
-    function setStatus(text) {
+    // warn: a problem (no model, no camera), shown as a calm bar instead of the big instruction
+    function setStatus(text, warn) {
         statusEl.textContent = text;
+        statusEl.classList.toggle('ms-status-warn', Boolean(warn));
     }
 
     // ---- Result screen --------------------------------------------------
-    function showResult(allowed, text) {
-        resultTextEl.textContent = text;  // textContent: names are never read as HTML
+    // title: "Welcome" / "Blocked"; detail: the member's name or the reason
+    function showResult(allowed, title, detail) {
+        resultTextEl.textContent = title;  // textContent: names are never read as HTML
+        resultDetailEl.textContent = detail || '';
         resultEl.className = 'ms-result ' + (allowed ? 'ms-allowed' : 'ms-blocked');
         resultEl.hidden = false;
     }
@@ -64,13 +69,13 @@
                 throw new Error(data.error.message);
             }
             if (data.result.result === 'allowed') {
-                showResult(true, 'Welcome, ' + data.result.member_name);
+                showResult(true, 'Welcome', data.result.member_name);
             } else {
-                showResult(false, 'BLOCKED - ' + data.result.reason);
+                showResult(false, 'Blocked', data.result.reason);
             }
         } catch (error) {
             console.warn('MatSafe: check-in failed', error);
-            showResult(false, 'ERROR - No answer from the server');
+            showResult(false, 'Error', 'No answer from the server');
         }
         if (params.face_label) {
             ignoreUntil[params.face_label] = Date.now() + IGNORE_MS;
@@ -141,7 +146,7 @@
             model = await tmImage.load(MODEL_URL, METADATA_URL);
         } catch (error) {
             console.warn('MatSafe: face model not loaded', error);
-            setStatus('Face model not loaded, use member code');
+            setStatus('Face model not loaded, use member code', true);
             return;
         }
         // 2. Webcam. Browsers only allow it on localhost or https.
@@ -151,7 +156,7 @@
             await webcam.play();
         } catch (error) {
             console.warn('MatSafe: camera not available', error);
-            setStatus('Camera not available, use member code');
+            setStatus('Camera not available, use member code', true);
             return;
         }
         cameraEl.appendChild(webcam.canvas);

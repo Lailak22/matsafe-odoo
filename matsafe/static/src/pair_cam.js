@@ -15,8 +15,8 @@
     const IGNORE_MS = 10000;         // a saved pair is ignored for 10 seconds
     const NOBODY = 'nobody';         // class name that means "no one at the camera"
     const CAMERA_SIZE = 400;         // webcam picture size in pixels
-    const STEP1_TEXT = 'Partner 1, look at the camera';
-    const STEP2_TEXT = 'Partner 2, look at the camera';
+    const STEP1_TEXT = 'Partner 1 - look at the camera';
+    const STEP2_TEXT = 'Partner 2 - look at the camera';
 
     // ---- Page elements --------------------------------------------------
     const statusEl = document.getElementById('ms-status');
@@ -24,6 +24,8 @@
     const cameraEl = document.getElementById('ms-camera');
     const resultEl = document.getElementById('ms-result');
     const resultTextEl = document.getElementById('ms-result-text');
+    const resultDetailEl = document.getElementById('ms-result-detail');
+    const stepsEl = document.getElementById('ms-steps');  // the "01 / 02" scoreboard
 
     // The session comes from the URL (?session_id=...); the server puts it on <body>
     const sessionId = parseInt(document.body.dataset.sessionId, 10);
@@ -38,14 +40,29 @@
     let streakStart = 0;       // when we first saw that face
     const ignoreUntil = {};    // face label -> time until which it is ignored
 
-    function setStatus(text) {
+    // warn: a problem (no session, no model, no camera), shown as a calm bar
+    function setStatus(text, warn) {
         statusEl.textContent = text;
+        statusEl.classList.toggle('ms-status-warn', Boolean(warn));
+    }
+
+    // Scoreboard: 1 = waiting for partner 1, 2 = waiting for partner 2
+    function setStep(step) {
+        stepsEl.dataset.at = String(step);
+    }
+
+    // Under the camera: partner 1's name tag, or a short message
+    function setPartner(text, isName) {
+        partnerEl.textContent = text || '';
+        partnerEl.className = 'ms-partner' + (text ? (isName ? ' ms-partner-name' : ' ms-partner-msg') : '');
     }
 
     // ---- Result screen --------------------------------------------------
-    function showResult(ok, text) {
-        resultTextEl.textContent = text;  // textContent: names are never read as HTML
-        resultEl.className = 'ms-result ' + (ok ? 'ms-allowed' : 'ms-blocked');
+    // title: "Pair saved" / "Not saved"; detail: the two names or the reason
+    function showResult(ok, title, detail) {
+        resultTextEl.textContent = title;  // textContent: names are never read as HTML
+        resultDetailEl.textContent = detail || '';
+        resultEl.className = 'ms-result ' + (ok ? 'ms-saved' : 'ms-blocked');
         resultEl.hidden = false;
     }
 
@@ -59,7 +76,8 @@
         clearTimeout(partner2Timer);
         partnerA = null;
         streakLabel = null;
-        partnerEl.textContent = message || '';
+        setPartner(message, false);
+        setStep(1);
         setStatus(STEP1_TEXT);
     }
 
@@ -68,7 +86,8 @@
         if (partnerA === null) {
             // Step 1 done: remember partner 1 and wait up to 15 seconds for partner 2
             partnerA = label;
-            partnerEl.textContent = 'Partner 1: ' + label;
+            setPartner(label, true);
+            setStep(2);
             setStatus(STEP2_TEXT);
             partner2Timer = setTimeout(function () {
                 startOver('No second partner in 15 seconds, start again');
@@ -98,15 +117,15 @@
                 throw new Error(data.error.message);
             }
             if (data.result.result === 'saved') {
-                showResult(true, 'Pair saved: ' + data.result.member_a_name + ' + ' + data.result.member_b_name);
+                showResult(true, 'Pair saved', data.result.member_a_name + ' + ' + data.result.member_b_name);
                 // Both are probably still standing there: do not start a new pair with them at once
                 ignoreUntil[labelA] = ignoreUntil[labelB] = Date.now() + IGNORE_MS;
             } else {
-                showResult(false, 'NOT SAVED - ' + data.result.reason);
+                showResult(false, 'Not saved', data.result.reason);
             }
         } catch (error) {
             console.warn('MatSafe: pair not saved', error);
-            showResult(false, 'ERROR - Pair not saved. Are you logged in as a coach?');
+            showResult(false, 'Not saved', 'Are you logged in as a coach?');
         }
         // Back to partner 1 after 3 seconds
         setTimeout(function () {
@@ -166,7 +185,7 @@
     // ---- Start ----------------------------------------------------------
     async function start() {
         if (!sessionId) {
-            setStatus('Session not found. Open this page from the session form.');
+            setStatus('Session not found. Open this page from the session form.', true);
             return;
         }
         // 1. Face model
@@ -175,7 +194,7 @@
             model = await tmImage.load(MODEL_URL, METADATA_URL);
         } catch (error) {
             console.warn('MatSafe: face model not loaded', error);
-            setStatus('Face model not loaded. Add the pair by hand on the session form.');
+            setStatus('Face model not loaded. Add the pair by hand on the session form.', true);
             return;
         }
         // 2. Webcam. Browsers only allow it on localhost or https.
@@ -185,7 +204,7 @@
             await webcam.play();
         } catch (error) {
             console.warn('MatSafe: camera not available', error);
-            setStatus('Camera not available. Add the pair by hand on the session form.');
+            setStatus('Camera not available. Add the pair by hand on the session form.', true);
             return;
         }
         cameraEl.appendChild(webcam.canvas);
