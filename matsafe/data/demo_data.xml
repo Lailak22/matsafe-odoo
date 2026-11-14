@@ -13,8 +13,8 @@
         <field name="member_state">active</field>
         <field name="monthly_fee" eval="600"/>
     </record>
-    <record id="member_saif" model="res.partner">
-        <field name="name">Saif Al Hashimi</field>
+    <record id="member_sara" model="res.partner">
+        <field name="name">Sara Al Hashimi</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M002</field>
         <field name="face_label">Hoor</field>
@@ -37,7 +37,7 @@
         <field name="name">Faisal Al Zaabi</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M004</field>
-        <field name="face_label">Person4</field>
+        <field name="face_label">Kdj</field>
         <field name="weight_kg" eval="55"/>
         <field name="level">intermediate</field>
         <field name="member_state">active</field>
@@ -141,7 +141,7 @@
         <field name="coach_id" ref="base.user_admin"/>
         <field name="discipline">wrestling</field>
         <field name="mat_zone">mat_a</field>
-        <field name="attendee_ids" eval="[(6, 0, [ref('member_omar'), ref('member_hamdan'), ref('member_saif'), ref('member_majid'), ref('member_ahmed'), ref('member_saeed')])]"/>
+        <field name="attendee_ids" eval="[(6, 0, [ref('member_omar'), ref('member_hamdan'), ref('member_sara'), ref('member_majid'), ref('member_ahmed'), ref('member_saeed')])]"/>
         <field name="state">done</field>
     </record>
     <record id="session_4" model="matsafe.session">
@@ -150,7 +150,7 @@
         <field name="coach_id" ref="base.user_admin"/>
         <field name="discipline">bjj_gi</field>
         <field name="mat_zone">mat_a</field>
-        <field name="attendee_ids" eval="[(6, 0, [ref('member_omar'), ref('member_saif'), ref('member_yousef'), ref('member_faisal'), ref('member_nasser'), ref('member_ali'), ref('member_ahmed'), ref('member_rashid')])]"/>
+        <field name="attendee_ids" eval="[(6, 0, [ref('member_omar'), ref('member_sara'), ref('member_yousef'), ref('member_faisal'), ref('member_nasser'), ref('member_ali'), ref('member_ahmed'), ref('member_rashid')])]"/>
         <field name="state">done</field>
     </record>
     <record id="session_5" model="matsafe.session">
@@ -159,7 +159,7 @@
         <field name="coach_id" ref="base.user_admin"/>
         <field name="discipline">muay_thai</field>
         <field name="mat_zone">mat_b</field>
-        <field name="attendee_ids" eval="[(6, 0, [ref('member_omar'), ref('member_rashid'), ref('member_saif'), ref('member_faisal'), ref('member_majid'), ref('member_hamdan')])]"/>
+        <field name="attendee_ids" eval="[(6, 0, [ref('member_omar'), ref('member_rashid'), ref('member_sara'), ref('member_faisal'), ref('member_majid'), ref('member_hamdan')])]"/>
         <field name="state">done</field>
     </record>
     <record id="session_6" model="matsafe.session">
@@ -179,7 +179,7 @@
         <field name="coach_id" ref="base.user_admin"/>
         <field name="discipline">bjj_nogi</field>
         <field name="mat_zone">mat_a</field>
-        <field name="attendee_ids" eval="[(6, 0, [ref('member_omar'), ref('member_saif'), ref('member_yousef'), ref('member_faisal'), ref('member_hamdan'), ref('member_nasser'), ref('member_rashid'), ref('member_ali')])]"/>
+        <field name="attendee_ids" eval="[(6, 0, [ref('member_omar'), ref('member_sara'), ref('member_yousef'), ref('member_faisal'), ref('member_hamdan'), ref('member_nasser'), ref('member_rashid'), ref('member_ali')])]"/>
         <field name="state">draft</field>
     </record>
 
@@ -228,7 +228,7 @@
     </record>
     <record id="pair_session_3_2" model="matsafe.pairing">
         <field name="session_id" ref="session_3"/>
-        <field name="member_a_id" ref="member_saif"/>
+        <field name="member_a_id" ref="member_sara"/>
         <field name="member_b_id" ref="member_majid"/>
         <field name="source">auto</field>
     </record>
@@ -241,7 +241,7 @@
     <record id="pair_session_4_1" model="matsafe.pairing">
         <field name="session_id" ref="session_4"/>
         <field name="member_a_id" ref="member_omar"/>
-        <field name="member_b_id" ref="member_saif"/>
+        <field name="member_b_id" ref="member_sara"/>
         <field name="source">auto</field>
     </record>
     <record id="pair_session_4_2" model="matsafe.pairing">
@@ -270,7 +270,7 @@
     </record>
     <record id="pair_session_5_2" model="matsafe.pairing">
         <field name="session_id" ref="session_5"/>
-        <field name="member_a_id" ref="member_saif"/>
+        <field name="member_a_id" ref="member_sara"/>
         <field name="member_b_id" ref="member_faisal"/>
         <field name="source">auto</field>
     </record>
@@ -390,8 +390,8 @@
         <field name="method">code</field>
         <field name="result">allowed</field>
     </record>
-    <record id="checkin_session_3_saif" model="matsafe.checkin">
-        <field name="member_id" ref="member_saif"/>
+    <record id="checkin_session_3_sara" model="matsafe.checkin">
+        <field name="member_id" ref="member_sara"/>
         <field name="datetime" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d 14:50:00')"/>
         <field name="method">code</field>
         <field name="result">allowed</field>
@@ -420,8 +420,8 @@
         <field name="method">code</field>
         <field name="result">allowed</field>
     </record>
-    <record id="checkin_session_4_saif" model="matsafe.checkin">
-        <field name="member_id" ref="member_saif"/>
+    <record id="checkin_session_4_sara" model="matsafe.checkin">
+        <field name="member_id" ref="member_sara"/>
         <field name="datetime" eval="(DateTime.today() - relativedelta(days=3)).strftime('%Y-%m-%d 14:50:00')"/>
         <field name="method">code</field>
         <field name="result">allowed</field>
@@ -474,8 +474,8 @@
         <field name="method">code</field>
         <field name="result">allowed</field>
     </record>
-    <record id="checkin_session_5_saif" model="matsafe.checkin">
-        <field name="member_id" ref="member_saif"/>
+    <record id="checkin_session_5_sara" model="matsafe.checkin">
+        <field name="member_id" ref="member_sara"/>
         <field name="datetime" eval="(DateTime.today() - relativedelta(days=2)).strftime('%Y-%m-%d 14:50:00')"/>
         <field name="method">code</field>
         <field name="result">allowed</field>
