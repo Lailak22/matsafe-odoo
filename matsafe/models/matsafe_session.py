@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+from markupsafe import Markup
+
 from odoo import fields, models
 
 
@@ -35,32 +37,62 @@ class MatsafeSession(models.Model):
     def action_start(self):
         self.write({'state': 'running'})
 
+    MAX_WEIGHT_GAP = 10  # kg
+
     def action_make_pairs(self):
-        """Pair active attendees by weight; avoid repeating each member's last partner."""
+        """Sort by weight, then pair each member with the nearest valid partner.
+        Valid = within 10 kg and not beginner with advanced; avoid last session's partner if possible."""
         for session in self:
             # Remove previous auto pairings of this session (camera/manual ones stay)
             session.pairing_ids.filtered(lambda p: p.source == 'auto').unlink()
 
-            # Only active members not limited by return-to-play, lightest first
-            pool = session.attendee_ids.filtered(
-                lambda m: m.member_state == 'active' and m.rtp_stage not in ('no_sparring', 'drilling')
-            ).sorted('weight_kg')
-            pool = list(pool)
+            sat_out = []  # "Name: reason" lines for the note
+            # Skip blocked/frozen members and those limited by return-to-play
+            pool = []
+            for member in session.attendee_ids.sorted('weight_kg'):
+                if member.member_state != 'active':
+                    sat_out.append("%s: %s" % (member.name, member.member_state))
+                elif member.rtp_stage in ('no_sparring', 'drilling'):
+                    sat_out.append("%s: return-to-play (%s)" % (member.name, member.rtp_stage.replace('_', ' ')))
+                else:
+                    pool.append(member)
+
+            eligible = list(pool)
             pairs = []
-            while len(pool) >= 2:
-                first = pool.pop(0)
+            while pool:
+                first = pool.pop(0)  # lightest member left
+                # Pool is sorted by weight, so valid partners come nearest first
+                valid = [m for m in pool if session._can_pair(first, m)]
+                if not valid:
+                    # Reason looks at the whole group, not only who is left
+                    others = [m for m in eligible if m != first]
+                    if not any(abs(m.weight_kg - first.weight_kg) <= self.MAX_WEIGHT_GAP for m in others):
+                        reason = "no partner within %s kg" % self.MAX_WEIGHT_GAP
+                    elif not any(session._can_pair(first, m) for m in others):
+                        reason = "no partner at a compatible level within %s kg" % self.MAX_WEIGHT_GAP
+                    else:
+                        reason = "valid partners were already paired"
+                    sat_out.append("%s: %s" % (first.name, reason))
+                    continue
                 last_partner = session._last_partner(first)
-                # Nearest neighbour by weight who was not their last partner, else simply the nearest
-                mate = next((m for m in pool if m != last_partner), pool[0])
+                # Nearest valid partner who was not their last partner, else the nearest valid one
+                mate = next((m for m in valid if m != last_partner), valid[0])
                 pool.remove(mate)
                 pairs.append({'session_id': session.id, 'member_a_id': first.id,
                               'member_b_id': mate.id, 'source': 'auto'})
             self.env['matsafe.pairing'].create(pairs)
 
-            # Odd number: one person sits out this round
-            if pool:
-                session.message_post(body="Make Pairs: %s has no partner this round." % pool[0].name)
+            # One note listing everyone who sits out and why
+            if sat_out:
+                session.message_post(
+                    body=Markup("Make Pairs: sitting out this round<br/>") + Markup("<br/>").join(sat_out),
+                    subtype_xmlid='mail.mt_note')
         return True
+
+    def _can_pair(self, a, b):
+        """Within 10 kg and not beginner with advanced."""
+        return (abs(a.weight_kg - b.weight_kg) <= self.MAX_WEIGHT_GAP
+                and {a.level, b.level} != {'beginner', 'advanced'})
 
     def _last_partner(self, member):
         """Partner of the member in their most recent other session (empty if none)."""
