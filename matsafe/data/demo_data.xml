@@ -44,7 +44,7 @@
         <field name="email">khadejeh.alhadhoud@example.com</field>
         <field name="is_member" eval="True"/>
         <field name="member_code">M004</field>
-        <field name="face_label">Kdj</field>
+        <field name="face_label">Khadija</field>
         <field name="weight_kg" eval="55"/>
         <field name="level">intermediate</field>
         <field name="member_state">active</field>
