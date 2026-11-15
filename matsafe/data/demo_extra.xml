@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MatSafe extra demo data (Person C): history so every screen has something to show.
+     Loads after demo_data.xml (Person D) and reuses its members and sessions.
+
+     Rules so the live demo still works:
+     - The 4 team members (face labels) and Khalid (absence demo) are not touched.
+     - The two OPEN reports below are older than 7 days, so they can never join the
+       outbreak check when someone reports during the demo.
+     - Reports are created directly as open/cleared, so no emails and no chain run on install.
+     Times are UTC: 15:00 UTC = 19:00 Dubai. -->
+<odoo noupdate="1">
+
+    <!-- ================= PAST OUTBREAK (closed) ================= -->
+    <record id="cluster_past" model="matsafe.cluster">
+        <field name="name" eval="'Outbreak ' + (DateTime.today() - relativedelta(days=24)).strftime('%Y-%m-%d')"/>
+        <field name="state">closed</field>
+    </record>
+
+    <!-- ================= REPORT HISTORY ================= -->
+    <record id="report_past_skin_1" model="matsafe.report">
+        <field name="member_id" ref="member_yousef"/>
+        <field name="report_type">skin</field>
+        <field name="description">Red ring-shaped rash on the forearm, itchy. Seen a doctor: ringworm.</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=26)).strftime('%Y-%m-%d 17:10:00')"/>
+        <field name="confirm_date" eval="(DateTime.today() - relativedelta(days=26)).strftime('%Y-%m-%d 17:25:00')"/>
+        <field name="state">cleared</field>
+        <field name="cluster_id" ref="cluster_past"/>
+        <field name="contact_ids" eval="[(6, 0, [ref('member_ali'), ref('member_majid'), ref('member_nasser')])]"/>
+        <field name="cleared_by" ref="base.user_admin"/>
+    </record>
+    <record id="report_past_skin_2" model="matsafe.report">
+        <field name="member_id" ref="member_ali"/>
+        <field name="report_type">skin</field>
+        <field name="description">Small round patch on the neck, appeared 2 days after training.</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=24)).strftime('%Y-%m-%d 09:40:00')"/>
+        <field name="confirm_date" eval="(DateTime.today() - relativedelta(days=24)).strftime('%Y-%m-%d 09:52:00')"/>
+        <field name="state">cleared</field>
+        <field name="cluster_id" ref="cluster_past"/>
+        <field name="contact_ids" eval="[(6, 0, [ref('member_yousef'), ref('member_saeed')])]"/>
+        <field name="cleared_by" ref="base.user_admin"/>
+    </record>
+    <record id="report_past_viral" model="matsafe.report">
+        <field name="member_id" ref="member_majid"/>
+        <field name="report_type">viral</field>
+        <field name="description">Fever and sore throat since yesterday.</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=18)).strftime('%Y-%m-%d 06:30:00')"/>
+        <field name="confirm_date" eval="(DateTime.today() - relativedelta(days=18)).strftime('%Y-%m-%d 06:45:00')"/>
+        <field name="state">cleared</field>
+        <field name="cleared_by" ref="base.user_admin"/>
+    </record>
+    <record id="report_past_injury" model="matsafe.report">
+        <field name="member_id" ref="member_saeed"/>
+        <field name="report_type">injury</field>
+        <field name="description">Knee: twisted it in a takedown during sparring. Pain 3/5.</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=21)).strftime('%Y-%m-%d 18:05:00')"/>
+        <field name="confirm_date" eval="(DateTime.today() - relativedelta(days=21)).strftime('%Y-%m-%d 18:20:00')"/>
+        <field name="state">cleared</field>
+        <field name="cleared_by" ref="base.user_admin"/>
+    </record>
+    <record id="report_past_other" model="matsafe.report">
+        <field name="member_id" ref="member_nasser"/>
+        <field name="report_type">other</field>
+        <field name="description">Feeling very tired after a long work week, skipping a few days.</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=13)).strftime('%Y-%m-%d 12:00:00')"/>
+        <field name="confirm_date" eval="(DateTime.today() - relativedelta(days=13)).strftime('%Y-%m-%d 12:10:00')"/>
+        <field name="state">cleared</field>
+        <field name="cleared_by" ref="base.user_admin"/>
+    </record>
+
+    <!-- Two members currently in return-to-play (open reports, older than 7 days on purpose) -->
+    <record id="report_open_injury" model="matsafe.report">
+        <field name="member_id" ref="member_hamdan"/>
+        <field name="report_type">injury</field>
+        <field name="description">Shoulder: strained it in an armbar, pain 4/5. Physio says light drilling only.</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=9)).strftime('%Y-%m-%d 16:30:00')"/>
+        <field name="confirm_date" eval="(DateTime.today() - relativedelta(days=9)).strftime('%Y-%m-%d 16:40:00')"/>
+        <field name="state">open</field>
+    </record>
+    <record id="report_open_head" model="matsafe.report">
+        <field name="member_id" ref="member_rashid"/>
+        <field name="report_type">head</field>
+        <field name="description">Knee to the head in a scramble, headache for a day. No dizziness now.</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=12)).strftime('%Y-%m-%d 17:45:00')"/>
+        <field name="confirm_date" eval="(DateTime.today() - relativedelta(days=12)).strftime('%Y-%m-%d 17:50:00')"/>
+        <field name="state">open</field>
+    </record>
+
+    <!-- Put those two members in their return-to-play stage -->
+    <record id="member_hamdan" model="res.partner">
+        <field name="open_report_id" ref="report_open_injury"/>
+        <field name="rtp_stage">drilling</field>
+    </record>
+    <record id="member_rashid" model="res.partner">
+        <field name="open_report_id" ref="report_open_head"/>
+        <field name="rtp_stage">light_sparring</field>
+    </record>
+
+    <!-- One frozen membership (travelling), so the dashboard shows all three states -->
+    <record id="member_saeed" model="res.partner">
+        <field name="member_state">frozen</field>
+    </record>
+
+    <!-- ================= DOOR LOG: blocked entries ================= -->
+    <record id="checkin_blocked_yousef" model="matsafe.checkin">
+        <field name="member_id" ref="member_yousef"/>
+        <field name="datetime" eval="(DateTime.today() - relativedelta(days=25)).strftime('%Y-%m-%d 14:52:00')"/>
+        <field name="method">face</field>
+        <field name="result">blocked</field>
+        <field name="reason">Cleared by coach required</field>
+    </record>
+    <record id="checkin_blocked_ali" model="matsafe.checkin">
+        <field name="member_id" ref="member_ali"/>
+        <field name="datetime" eval="(DateTime.today() - relativedelta(days=22)).strftime('%Y-%m-%d 14:47:00')"/>
+        <field name="method">code</field>
+        <field name="result">blocked</field>
+        <field name="reason">Cleared by coach required</field>
+    </record>
+    <record id="checkin_blocked_saeed" model="matsafe.checkin">
+        <field name="member_id" ref="member_saeed"/>
+        <field name="datetime" eval="(DateTime.today() - relativedelta(days=1)).strftime('%Y-%m-%d 14:55:00')"/>
+        <field name="method">code</field>
+        <field name="result">blocked</field>
+        <field name="reason">Membership paused</field>
+    </record>
+    <record id="checkin_unknown" model="matsafe.checkin">
+        <field name="datetime" eval="(DateTime.today() - relativedelta(days=2)).strftime('%Y-%m-%d 14:58:00')"/>
+        <field name="method">code</field>
+        <field name="result">blocked</field>
+        <field name="reason">Unknown member</field>
+    </record>
+
+    <!-- ================= A CLASS TOMORROW (fills the calendar) ================= -->
+    <record id="session_tomorrow" model="matsafe.session">
+        <field name="name">Muay Thai Tomorrow 19:00</field>
+        <field name="start" eval="(DateTime.today() + relativedelta(days=1)).strftime('%Y-%m-%d 15:00:00')"/>
+        <field name="coach_id" ref="base.user_admin"/>
+        <field name="discipline">muay_thai</field>
+        <field name="mat_zone">mat_b</field>
+        <field name="state">draft</field>
+        <field name="attendee_ids" eval="[(6, 0, [ref('member_yousef'), ref('member_majid'), ref('member_nasser'), ref('member_ali')])]"/>
+    </record>
+
+    <!-- ================= MAT CLEANING history (closed tasks) ================= -->
+    <record id="task_clean_past_1" model="project.task">
+        <field name="name">Deep clean Mat A - past outbreak</field>
+        <field name="project_id" ref="project_mat_cleaning"/>
+        <field name="stage_id" ref="task_stage_done"/>
+        <field name="state">1_done</field>
+        <field name="date_deadline" eval="(DateTime.today() - relativedelta(days=24)).strftime('%Y-%m-%d 20:00:00')"/>
+    </record>
+    <record id="task_clean_past_2" model="project.task">
+        <field name="name">Clean Mat B - viral report</field>
+        <field name="project_id" ref="project_mat_cleaning"/>
+        <field name="stage_id" ref="task_stage_done"/>
+        <field name="state">1_done</field>
+        <field name="date_deadline" eval="(DateTime.today() - relativedelta(days=18)).strftime('%Y-%m-%d 20:00:00')"/>
+    </record>
+
+    <!-- ================= COACH INBOX + FACILITY ISSUES =================
+         Same project names the report form uses, so the form adds to these
+         projects instead of creating new ones. -->
+    <record id="project_coach_inbox" model="project.project">
+        <field name="name">Coach Inbox</field>
+        <field name="privacy_visibility">followers</field>
+    </record>
+    <record id="project_facility_issues" model="project.project">
+        <field name="name">Facility Issues</field>
+    </record>
+
+    <record id="stage_inbox_new" model="project.task.type">
+        <field name="name">New</field>
+        <field name="sequence">1</field>
+        <field name="project_ids" eval="[(4, ref('project_coach_inbox')), (4, ref('project_facility_issues'))]"/>
+    </record>
+    <record id="stage_inbox_progress" model="project.task.type">
+        <field name="name">In progress</field>
+        <field name="sequence">2</field>
+        <field name="project_ids" eval="[(4, ref('project_coach_inbox')), (4, ref('project_facility_issues'))]"/>
+    </record>
+    <record id="stage_inbox_done" model="project.task.type">
+        <field name="name">Done</field>
+        <field name="sequence">3</field>
+        <field name="fold" eval="True"/>
+        <field name="project_ids" eval="[(4, ref('project_coach_inbox')), (4, ref('project_facility_issues'))]"/>
+    </record>
+
+    <record id="task_inbox_1" model="project.task">
+        <field name="name">Unsafe partner: kept cranking a neck crank after the tap</field>
+        <field name="project_id" ref="project_coach_inbox"/>
+        <field name="stage_id" ref="stage_inbox_new"/>
+        <field name="description">&lt;p&gt;Class: No-Gi Sat 19:00. Happened twice in the same round. Reporter asked to stay anonymous.&lt;/p&gt;</field>
+    </record>
+    <record id="task_inbox_2" model="project.task">
+        <field name="name">Unsafe partner: too much power with a beginner</field>
+        <field name="project_id" ref="project_coach_inbox"/>
+        <field name="stage_id" ref="stage_inbox_progress"/>
+        <field name="description">&lt;p&gt;Class: Wrestling Mon 19:00. Coach spoke to the member, follow up next week.&lt;/p&gt;</field>
+    </record>
+
+    <record id="task_facility_1" model="project.task">
+        <field name="name">Torn seam on Mat B, near the wall</field>
+        <field name="project_id" ref="project_facility_issues"/>
+        <field name="stage_id" ref="stage_inbox_new"/>
+        <field name="description">&lt;p&gt;About 10 cm open. Toes catch on it during takedowns.&lt;/p&gt;</field>
+    </record>
+    <record id="task_facility_2" model="project.task">
+        <field name="name">Wall pad loose next to the door</field>
+        <field name="project_id" ref="project_facility_issues"/>
+        <field name="stage_id" ref="stage_inbox_progress"/>
+        <field name="description">&lt;p&gt;Velcro has come off, the pad slides down.&lt;/p&gt;</field>
+    </record>
+    <record id="task_facility_3" model="project.task">
+        <field name="name">Men's shower drain blocked</field>
+        <field name="project_id" ref="project_facility_issues"/>
+        <field name="stage_id" ref="stage_inbox_done"/>
+        <field name="state">1_done</field>
+        <field name="description">&lt;p&gt;Plumber came on Thursday, fixed.&lt;/p&gt;</field>
+    </record>
+
+    <!-- ================= MORE GEAR ================= -->
+    <record id="gear_shin_1" model="matsafe.gear">
+        <field name="name">Shin Guards M #1</field>
+        <field name="state">blocked</field>
+        <field name="last_change" eval="(DateTime.today() - relativedelta(days=3)).strftime('%Y-%m-%d 10:00:00')"/>
+    </record>
+    <record id="gear_gi_3" model="matsafe.gear">
+        <field name="name">Rental Gi A2 #3</field>
+        <field name="state">clean</field>
+    </record>
+</odoo>

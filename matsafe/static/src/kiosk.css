@@ -583,3 +583,21 @@ body {
         animation: none;
     }
 }
+
+
+/* ---- Small staff link into the Odoo app (added by Person C) ---- */
+.ms-staff {
+    margin-left: auto;
+    color: var(--ms-muted);
+    font-family: var(--ms-display);
+    font-size: clamp(0.8rem, 1.6vh, 1.1rem);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.ms-staff:hover,
+.ms-staff:focus-visible {
+    color: var(--ms-red);
+}

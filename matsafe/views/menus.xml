@@ -36,8 +36,32 @@
     <menuitem id="menu_matsafe_facility_issues" name="Facility Issues" parent="menu_matsafe_inbox"
               action="action_matsafe_facility_issues" sequence="2"/>
 
-    <!-- Settings -->
-    <menuitem id="menu_matsafe_settings" name="Settings" parent="menu_matsafe_root" sequence="90"
+    <!-- Member pages: open the website pages from inside the app (new tab) -->
+    <record id="action_open_report_page" model="ir.actions.act_url">
+        <field name="name">Report form</field>
+        <field name="url">/matsafe/report</field>
+        <field name="target">new</field>
+    </record>
+    <record id="action_open_rate_page" model="ir.actions.act_url">
+        <field name="name">Rate partners</field>
+        <field name="url">/matsafe/rate</field>
+        <field name="target">new</field>
+    </record>
+    <record id="action_open_kiosk_page" model="ir.actions.act_url">
+        <field name="name">Door kiosk</field>
+        <field name="url">/matsafe/kiosk</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_matsafe_pages" name="Member Pages" parent="menu_matsafe_root" sequence="80"/>
+    <menuitem id="menu_matsafe_page_report" name="Report Form" parent="menu_matsafe_pages"
+              action="action_open_report_page" sequence="1"/>
+    <menuitem id="menu_matsafe_page_rate" name="Rate Partners" parent="menu_matsafe_pages"
+              action="action_open_rate_page" sequence="2"/>
+    <menuitem id="menu_matsafe_page_kiosk" name="Door Kiosk" parent="menu_matsafe_pages"
+              action="action_open_kiosk_page" sequence="3"/>
+
+    <!-- Operations (head coaches): pairing history, cleaning jobs, automatic checks -->
+    <menuitem id="menu_matsafe_settings" name="Operations" parent="menu_matsafe_root" sequence="90"
               groups="matsafe.group_head_coach"/>
     <menuitem id="menu_matsafe_settings_pairings" name="Pairings"
               parent="menu_matsafe_settings" action="action_matsafe_pairing" sequence="1"/>

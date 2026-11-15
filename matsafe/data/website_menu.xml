@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Links in the public website's top menu, so members find the MatSafe pages
+         from the gym website (Odoo's Website app) -->
+    <record id="website_menu_report" model="website.menu">
+        <field name="name">Report a problem</field>
+        <field name="url">/matsafe/report</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">40</field>
+    </record>
+    <record id="website_menu_rate" model="website.menu">
+        <field name="name">Rate partners</field>
+        <field name="url">/matsafe/rate</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">41</field>
+    </record>
+</odoo>
